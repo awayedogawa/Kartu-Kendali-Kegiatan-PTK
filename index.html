@@ -157,20 +157,14 @@
 
         // --- Logika Halaman ---
 
-        // ===================================================================
-        // BAGIAN BARU: Pengecekan Sesi Login Saat Halaman Dimuat
-        // ===================================================================
+        // Pengecekan Sesi Login Saat Halaman Dimuat
         (function checkActiveSession() {
             const activeUserRole = sessionStorage.getItem('userRole');
             if (activeUserRole) {
-                if (activeUserRole === 'admin') {
-                    window.location.href = 'admin.html';
-                } else if (activeUserRole === 'atasan' || activeUserRole === 'pembuat') {
-                    window.location.href = 'dashboard.html';
-                }
+                // Jika ada sesi aktif, langsung arahkan ke dashboard
+                window.location.href = 'dashboard.html';
             }
         })();
-        // ===================================================================
 
         const adminBtn = document.getElementById('adminBtn');
         const atasanBtn = document.getElementById('atasanBtn');
@@ -226,9 +220,9 @@
                 // Logika login untuk Admin
                 if (credential === '1986') {
                     alert('Login Admin Berhasil!');
-                    // Simpan status login di sessionStorage
                     sessionStorage.setItem('userRole', 'admin');
-                    window.location.href = 'admin.html'; // Arahkan ke halaman admin
+                    sessionStorage.setItem('userName', 'Administrator'); // Nama default untuk admin
+                    window.location.href = 'dashboard.html'; // DIUBAH: Arahkan ke dashboard.html
                 } else {
                     alert('Password Admin salah!');
                 }
@@ -245,11 +239,10 @@
                     } else {
                         const userData = querySnapshot.docs[0].data();
                         alert(`Login Berhasil! Selamat datang, ${userData.nama}`);
-                        // Simpan info pengguna di sessionStorage
                         sessionStorage.setItem('userRole', userData.role);
                         sessionStorage.setItem('userNip', userData.nip);
                         sessionStorage.setItem('userName', userData.nama);
-                        window.location.href = 'dashboard.html'; // Arahkan ke halaman dashboard
+                        window.location.href = 'dashboard.html';
                     }
                 } catch (error) {
                     console.error("Error saat login: ", error);
