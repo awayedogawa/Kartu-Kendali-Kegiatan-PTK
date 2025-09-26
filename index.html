@@ -157,6 +157,21 @@
 
         // --- Logika Halaman ---
 
+        // ===================================================================
+        // BAGIAN BARU: Pengecekan Sesi Login Saat Halaman Dimuat
+        // ===================================================================
+        (function checkActiveSession() {
+            const activeUserRole = sessionStorage.getItem('userRole');
+            if (activeUserRole) {
+                if (activeUserRole === 'admin') {
+                    window.location.href = 'admin.html';
+                } else if (activeUserRole === 'atasan' || activeUserRole === 'pembuat') {
+                    window.location.href = 'dashboard.html';
+                }
+            }
+        })();
+        // ===================================================================
+
         const adminBtn = document.getElementById('adminBtn');
         const atasanBtn = document.getElementById('atasanBtn');
         const pembuatBtn = document.getElementById('pembuatBtn');
@@ -175,4 +190,77 @@
                 selectedRole = 'admin';
                 adminBtn.classList.add('active');
                 inputLabel.textContent = 'Password Admin';
-                credentialInput.type = 'password
+                credentialInput.type = 'password';
+                credentialInput.placeholder = 'Masukkan password admin';
+            } else if (role === 'atasan') {
+                selectedRole = 'atasan';
+                atasanBtn.classList.add('active');
+                inputLabel.textContent = 'NIP Atasan Langsung';
+                credentialInput.type = 'text';
+                credentialInput.placeholder = 'Masukkan NIP Anda';
+            } else if (role === 'pembuat') {
+                selectedRole = 'pembuat';
+                pembuatBtn.classList.add('active');
+                inputLabel.textContent = 'NIP Pembuat Kegiatan';
+                credentialInput.type = 'text';
+                credentialInput.placeholder = 'Masukkan NIP Anda';
+            }
+        }
+
+        // Event listener untuk tombol peran
+        adminBtn.addEventListener('click', () => updateFormUI('admin'));
+        atasanBtn.addEventListener('click', () => updateFormUI('atasan'));
+        pembuatBtn.addEventListener('click', () => updateFormUI('pembuat'));
+
+        // Event listener untuk form login
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const credential = credentialInput.value.trim();
+
+            if (!credential) {
+                alert('Input tidak boleh kosong!');
+                return;
+            }
+
+            if (selectedRole === 'admin') {
+                // Logika login untuk Admin
+                if (credential === '1986') {
+                    alert('Login Admin Berhasil!');
+                    // Simpan status login di sessionStorage
+                    sessionStorage.setItem('userRole', 'admin');
+                    window.location.href = 'admin.html'; // Arahkan ke halaman admin
+                } else {
+                    alert('Password Admin salah!');
+                }
+            } else {
+                // Logika login untuk Atasan dan Pembuat
+                try {
+                    const usersRef = collection(db, 'users');
+                    const q = query(usersRef, where("nip", "==", credential), where("role", "==", selectedRole));
+                    
+                    const querySnapshot = await getDocs(q);
+                    
+                    if (querySnapshot.empty) {
+                        alert('Login Gagal! NIP tidak ditemukan atau peran tidak sesuai.');
+                    } else {
+                        const userData = querySnapshot.docs[0].data();
+                        alert(`Login Berhasil! Selamat datang, ${userData.nama}`);
+                        // Simpan info pengguna di sessionStorage
+                        sessionStorage.setItem('userRole', userData.role);
+                        sessionStorage.setItem('userNip', userData.nip);
+                        sessionStorage.setItem('userName', userData.nama);
+                        window.location.href = 'dashboard.html'; // Arahkan ke halaman dashboard
+                    }
+                } catch (error) {
+                    console.error("Error saat login: ", error);
+                    alert("Terjadi kesalahan saat mencoba login. Silakan coba lagi.");
+                }
+            }
+        });
+
+        // Inisialisasi tampilan form saat halaman dimuat
+        updateFormUI('admin');
+
+    </script>
+</body>
+</html>
