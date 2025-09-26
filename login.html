@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Kartu Kendali PTK</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+        
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --background-color: #f8f9fa;
+            --card-background: #ffffff;
+            --text-color: #212529;
+            --border-color: #dee2e6;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .login-card {
+            background-color: var(--card-background);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .login-card h1 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+        
+        .login-card p {
+            margin-bottom: 25px;
+            color: var(--secondary-color);
+            font-size: 0.9em;
+        }
+
+        .role-selector {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .role-button {
+            flex-grow: 1;
+            padding: 10px;
+            border: none;
+            background-color: transparent;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .role-button.active {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+        }
+
+        #loginForm label {
+            display: block;
+            text-align: left;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        #credentialInput {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            font-size: 1em;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .login-button:hover {
+            background-color: #0b5ed7;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="login-card">
+            <h1>Kartu Kendali PTK</h1>
+            <p>Dinas Pendidikan Tanah Bumbu</p>
+            
+            <div class="role-selector">
+                <button id="adminBtn" class="role-button active">Admin</button>
+                <button id="atasanBtn" class="role-button">Atasan</button>
+                <button id="pembuatBtn" class="role-button">Pembuat</button>
+            </div>
+
+            <form id="loginForm">
+                <label for="credentialInput" id="inputLabel">Password Admin</label>
+                <input type="password" id="credentialInput" required>
+                <button type="submit" class="login-button">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        // Impor fungsi yang diperlukan dari Firebase SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        // Konfigurasi Firebase Anda
+        const firebaseConfig = {
+            apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
+            authDomain: "kartu-kendali-kegiatan-ptk.firebaseapp.com",
+            projectId: "kartu-kendali-kegiatan-ptk",
+            storageBucket: "kartu-kendali-kegiatan-ptk.appspot.com",
+            messagingSenderId: "694993604999",
+            appId: "1:694993604999:web:83eaf3ddf0c5d0bc348322"
+        };
+
+        // Inisialisasi Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- Logika Halaman ---
+
+        const adminBtn = document.getElementById('adminBtn');
+        const atasanBtn = document.getElementById('atasanBtn');
+        const pembuatBtn = document.getElementById('pembuatBtn');
+        const loginForm = document.getElementById('loginForm');
+        const inputLabel = document.getElementById('inputLabel');
+        const credentialInput = document.getElementById('credentialInput');
+        
+        let selectedRole = 'admin'; // Role default
+
+        function updateFormUI(role) {
+            // Hapus kelas 'active' dari semua tombol
+            [adminBtn, atasanBtn, pembuatBtn].forEach(btn => btn.classList.remove('active'));
+            credentialInput.value = '';
+
+            if (role === 'admin') {
+                selectedRole = 'admin';
+                adminBtn.classList.add('active');
+                inputLabel.textContent = 'Password Admin';
+                credentialInput.type = 'password
