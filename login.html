@@ -153,9 +153,8 @@
         const db = getFirestore(app);
 
         (function checkActiveSession() {
-            const activeUserRole = sessionStorage.getItem('userRole');
-            if (activeUserRole) {
-                window.location.href = 'dashboard.html';
+            if (sessionStorage.getItem('userRole')) {
+                window.location.href = 'index.html';
             }
         })();
 
@@ -211,11 +210,8 @@
                     alert('Login Admin Berhasil!');
                     sessionStorage.setItem('userRole', 'admin');
                     sessionStorage.setItem('userName', 'Administrator');
-                    // ==========================================================
-                    // PERBAIKAN: Tambahkan jeda sebelum redirect
-                    // ==========================================================
                     setTimeout(() => {
-                        window.location.href = 'dashboard.html';
+                        window.location.href = 'index.html';
                     }, 50);
                 } else {
                     alert('Password Admin salah!');
@@ -235,11 +231,8 @@
                         sessionStorage.setItem('userRole', userData.role);
                         sessionStorage.setItem('userNip', userData.nip);
                         sessionStorage.setItem('userName', userData.nama);
-                        // ==========================================================
-                        // PERBAIKAN: Tambahkan jeda sebelum redirect
-                        // ==========================================================
                         setTimeout(() => {
-                            window.location.href = 'dashboard.html';
+                            window.location.href = 'index.html';
                         }, 50);
                     }
                 } catch (error) {
@@ -250,7 +243,6 @@
         });
 
         updateFormUI('admin');
-
     </script>
 </body>
 </html>
