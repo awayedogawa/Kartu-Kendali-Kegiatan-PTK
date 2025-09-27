@@ -137,7 +137,6 @@
             margin-top: 0;
         }
         
-        /* Placeholder for later content */
         .placeholder-text {
             color: var(--text-muted);
             text-align: center;
@@ -191,11 +190,9 @@
     </main>
 
     <script type="module">
-        // Impor fungsi yang diperlukan dari Firebase SDK (untuk nanti)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-        // Konfigurasi Firebase Anda
         const firebaseConfig = {
             apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
             authDomain: "kartu-kendali-kegiatan-ptk.firebaseapp.com",
@@ -205,42 +202,32 @@
             appId: "1:694993604999:web:83eaf3af3ddf0c5d0bc348322"
         };
 
-        // Inisialisasi Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- Logika Halaman ---
-
-        // 1. Pemeriksaan Sesi Login (Security Guard)
         const userRole = sessionStorage.getItem('userRole');
         const userName = sessionStorage.getItem('userName');
         
-        if (!userRole || (userRole !== 'atasan' && userRole !== 'pembuat')) {
+        if (!userRole) {
             alert('Akses ditolak! Silakan login terlebih dahulu.');
-            window.location.href = 'index.html';
+            window.location.href = 'login.html';
         }
 
-        // 2. Tampilkan Data Pengguna
         document.getElementById('userNameDisplay').textContent = userName;
         document.getElementById('userRoleDisplay').textContent = userRole;
         document.getElementById('welcomeMessage').textContent = `Selamat Datang, ${userName}!`;
         
-        // 3. Logika Tombol Logout
         const logoutBtn = document.getElementById('logoutBtn');
         logoutBtn.addEventListener('click', () => {
-            sessionStorage.clear(); // Hapus semua data sesi
-            window.location.href = 'index.html'; // Kembali ke halaman login
+            sessionStorage.clear();
+            window.location.href = 'login.html';
         });
 
-        // 4. Ambil dan Tampilkan Data Anggaran (Fungsi Placeholder)
-        // Di masa mendatang, kita akan mengisi fungsi ini untuk mengambil data dari Firestore
         async function loadDashboardData() {
-            // Placeholder: Nilai ini nantinya akan diambil dari database
             const totalPagu = 100000000;
             const totalRealisasi = 25000000;
             const sisaAnggaran = totalPagu - totalRealisasi;
 
-            // Format ke Rupiah
             const formatRupiah = (number) => {
                 return new Intl.NumberFormat('id-ID', {
                     style: 'currency',
@@ -249,15 +236,12 @@
                 }).format(number);
             };
 
-            // Tampilkan di UI
             document.getElementById('totalPagu').textContent = formatRupiah(totalPagu);
             document.getElementById('totalRealisasi').textContent = formatRupiah(totalRealisasi);
             document.getElementById('sisaAnggaran').textContent = formatRupiah(sisaAnggaran);
         }
 
-        // Jalankan fungsi saat halaman dimuat
         loadDashboardData();
-
     </script>
 </body>
 </html>
