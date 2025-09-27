@@ -35,7 +35,12 @@
         .card { background-color: var(--card-background); padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 30px; }
         .card h2 { margin-top: 0; }
         
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        /* DIPERBARUI: Mengatur grid menjadi 4 kolom */
+        .form-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 20px; 
+        }
         .form-group { display: flex; flex-direction: column; }
         .form-group label { margin-bottom: 8px; font-weight: 500; font-size: 0.9em; }
         .form-group input, .form-group select { padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 1em; font-family: 'Poppins', sans-serif; }
@@ -46,7 +51,6 @@
         .btn-danger { background-color: var(--danger-color); color: white; }
         .btn-submit { margin-top: 20px; }
 
-        /* BARU: Style untuk komponen */
         .komponen-container { margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 20px; }
         .komponen-item { display: grid; grid-template-columns: 3fr 1fr 1fr 2fr auto; gap: 10px; align-items: center; margin-bottom: 10px; }
         .komponen-item input, .komponen-item select { font-size: 0.9em; padding: 8px; }
@@ -60,6 +64,23 @@
         .status-proses { background-color: var(--warning-color); color: #333; }
         .status-pengajuan { background-color: var(--primary-color); color: white; }
         .status-terbayarkan { background-color: var(--success-color); color: white; }
+        
+        /* Media query untuk layar kecil */
+        @media (max-width: 992px) {
+            .form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .komponen-item {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -163,7 +184,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- Security & UI Setup ---
         const userRole = sessionStorage.getItem('userRole');
         const userName = sessionStorage.getItem('userName');
         if (!userRole) {
@@ -187,9 +207,8 @@
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 
         let dataAnggaran = [];
-        let dataKomponen = []; // BARU: Simpan data komponen
+        let dataKomponen = [];
 
-        // --- Memuat Dropdown Anggaran ---
         onSnapshot(collection(db, "anggaran"), (snapshot) => {
             dataAnggaran = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             const subKegiatanUnik = [...new Map(dataAnggaran.map(item => [item['kodeSubKegiatan'], item])).values()];
@@ -202,7 +221,6 @@
             });
         });
         
-        // --- BARU: Memuat data komponen ---
         onSnapshot(collection(db, "komponen"), (snapshot) => {
             dataKomponen = snapshot.docs.map(doc => doc.data());
             updateKomponenDropdowns();
@@ -224,9 +242,7 @@
             });
         }
         
-        // --- Event Listener Dinamis ---
         document.addEventListener('change', (e) => {
-            // Update dropdown rekening
             if (e.target.id === 'subKegiatan') {
                 const selectedKode = e.target.value;
                 kodeRekeningSelect.innerHTML = '<option value="">-- Pilih Kode Rekening --</option>';
@@ -240,22 +256,17 @@
                     });
                 }
             }
-            
-            // Update harga saat komponen dipilih
             if (e.target.classList.contains('komponen-pilihan')) {
                 const selectedOption = e.target.options[e.target.selectedIndex];
                 const harga = selectedOption.dataset.harga || 0;
                 e.target.closest('.komponen-item').querySelector('.komponen-harga').value = harga;
                 updateTotal();
             }
-
-            // Update total saat volume berubah
             if (e.target.classList.contains('komponen-volume')) {
                 updateTotal();
             }
         });
 
-        // --- Logika Tambah & Hitung Komponen ---
         addKomponenBtn.addEventListener('click', () => {
             const newItem = document.createElement('div');
             newItem.className = 'komponen-item';
@@ -280,7 +291,6 @@
             document.getElementById('totalJumlah').textContent = formatRupiah(total);
         }
         
-        // --- Simpan Data Kegiatan ---
         kegiatanForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -336,7 +346,6 @@
             }
         });
         
-        // --- Tampilkan Riwayat ---
         const q = query(collection(db, "transaksi"), orderBy("timestamp", "desc"));
         onSnapshot(q, (snapshot) => {
             riwayatTableBody.innerHTML = '';
