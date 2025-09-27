@@ -50,9 +50,30 @@
         .btn-submit { margin-top: 20px; }
 
         .komponen-container { margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 20px; }
-        /* DIPERBARUI: Grid komponen sekarang ada 6 kolom */
-        .komponen-item { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr 2fr auto; gap: 10px; align-items: center; margin-bottom: 10px; }
-        .komponen-item input, .komponen-item select { font-size: 0.9em; padding: 8px; }
+        
+        /* DIPERBARUI: Tata letak grid untuk rincian komponen */
+        .komponen-item {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr); /* 6 kolom dasar */
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .komponen-item:last-child {
+             margin-bottom: 0;
+             padding-bottom: 0;
+             border-bottom: none;
+        }
+        .komponen-item .rekening-pilihan { grid-column: 1 / 4; } /* Kolom 1-3 */
+        .komponen-item .komponen-pilihan { grid-column: 4 / 7; } /* Kolom 4-6 */
+        .komponen-item .komponen-volume { grid-column: 1 / 2; }
+        .komponen-item .komponen-satuan { grid-column: 2 / 3; }
+        .komponen-item .komponen-harga { grid-column: 3 / 6; }
+        .komponen-item .btn-danger { grid-column: 6 / 7; justify-self: end; }
+
+        .komponen-item input, .komponen-item select { font-size: 0.9em; padding: 8px; width: 100%; box-sizing: border-box; }
         .komponen-item input[readonly] { background-color: #e9ecef; cursor: not-allowed; }
         .total-container { margin-top: 20px; text-align: right; font-size: 1.2em; font-weight: 600; }
 
@@ -71,7 +92,6 @@
         .modal-content { background-color: #fff; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; }
         .close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; }
         
-        @media (max-width: 1200px) { .komponen-item { grid-template-columns: 1fr; gap: 8px; } }
     </style>
 </head>
 <body>
@@ -88,7 +108,8 @@
         <div class="card">
             <h2 id="formTitle">Tambah Realisasi Kegiatan</h2>
             <form id="kegiatanForm">
-                <input type="hidden" id="editId"> <div class="form-container">
+                <input type="hidden" id="editId">
+                <div class="form-container">
                     <div class="form-group"><label for="tanggal">Tanggal</label><input type="date" id="tanggal" required></div>
                     <div class="form-group"><label for="subKegiatan">Pilih Sub Kegiatan</label><select id="subKegiatan" required><option value="">Memuat...</option></select></div>
                 </div>
@@ -127,7 +148,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-        // ... (Firebase config tetap sama) ...
         const firebaseConfig = {
             apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
             authDomain: "kartu-kendali-kegiatan-ptk.firebaseapp.com",
@@ -136,7 +156,6 @@
             messagingSenderId: "694993604999",
             appId: "1:694993604999:web:83eaf3af3ddf0c5d0bc348322"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
@@ -162,7 +181,6 @@
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
         let dataAnggaran = [], dataKomponen = [], temporaryData = {};
 
-        // --- Muat Data Awal ---
         onSnapshot(collection(db, "anggaran"), (snapshot) => {
             dataAnggaran = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             const subKegiatanUnik = [...new Map(dataAnggaran.map(item => [item['kodeSubKegiatan'], item])).values()];
@@ -203,7 +221,6 @@
             selectElement.value = selectedValue;
         }
 
-        // --- Event Listeners Dinamis ---
         document.addEventListener('change', (e) => {
             if (e.target.id === 'subKegiatan') {
                 document.querySelectorAll('.rekening-pilihan').forEach(el => populateRekeningDropdown(el));
@@ -226,6 +243,7 @@
         function createKomponenItem(data = {}) {
             const newItem = document.createElement('div');
             newItem.className = 'komponen-item';
+            // DIPERBARUI: HTML untuk baris komponen
             newItem.innerHTML = `
                 <select class="rekening-pilihan" required><option value="">Pilih Rekening</option></select>
                 <select class="komponen-pilihan" required><option value="">Pilih Rekening Dulu</option></select>
@@ -242,7 +260,7 @@
         }
 
         addKomponenBtn.addEventListener('click', () => createKomponenItem());
-        if(komponenList.children.length === 0) addKomponenBtn.click(); // Tambah 1 item di awal
+        if(komponenList.children.length === 0) addKomponenBtn.click();
 
         window.updateTotal = function() {
             let total = 0;
@@ -253,10 +271,9 @@
             document.getElementById('totalJumlah').textContent = formatRupiah(total);
         }
         
-        // --- Logika Simpan (Create & Update) ---
         kegiatanForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            temporaryData = {}; // Reset
+            temporaryData = {};
             let totalPengajuan = 0;
             const rincianKomponen = [];
             document.querySelectorAll('.komponen-item').forEach(item => {
@@ -270,24 +287,20 @@
                     volume, satuan: item.querySelector('.komponen-satuan').value, harga, subtotal: harga * volume
                 });
             });
-
             temporaryData = {
                 tanggal: document.getElementById('tanggal').value,
                 kodeSubKegiatan: subKegiatanSelect.value,
                 namaSubKegiatan: subKegiatanSelect.options[subKegiatanSelect.selectedIndex].text.split(' - ')[1],
                 jumlah: totalPengajuan,
                 rincian: rincianKomponen,
-                status: 'Proses Pembuatan TNT', // Status awal saat create/update
+                status: 'Proses Pembuatan TNT',
                 diinputOleh: userName,
                 timestamp: new Date()
             };
-            
-            // Isi nama kegiatan jika mode edit
             const currentNamaKegiatan = document.getElementById('namaKegiatanInput').value;
             if(editIdInput.value && currentNamaKegiatan) {
                  document.getElementById('namaKegiatanInput').value = currentNamaKegiatan;
             }
-
             namaKegiatanModal.style.display = 'flex';
         });
 
@@ -296,10 +309,10 @@
             temporaryData.namaKegiatan = document.getElementById('namaKegiatanInput').value;
             const docId = editIdInput.value;
             try {
-                if (docId) { // Mode Update
+                if (docId) {
                     await updateDoc(doc(db, "transaksi", docId), temporaryData);
                     alert('Kegiatan berhasil diperbarui!');
-                } else { // Mode Create
+                } else {
                     await addDoc(collection(db, "transaksi"), temporaryData);
                     alert('Kegiatan baru berhasil disimpan!');
                 }
@@ -319,7 +332,6 @@
         }
         cancelEditBtn.addEventListener('click', resetForm);
 
-        // --- Daftar Kegiatan (Read, Edit, Delete) ---
         onSnapshot(query(collection(db, "transaksi"), orderBy("timestamp", "desc")), (snapshot) => {
             kegiatanTableBody.innerHTML = '';
             snapshot.forEach(doc => {
@@ -342,14 +354,12 @@
             const button = e.target.closest('.btn-icon');
             if(!button) return;
             const docId = button.dataset.id;
-            
             if (button.classList.contains('icon-delete')) {
                 if(confirm('Yakin ingin menghapus kegiatan ini?')) {
                     await deleteDoc(doc(db, "transaksi", docId));
                     alert('Kegiatan berhasil dihapus.');
                 }
             }
-
             if (button.classList.contains('icon-edit')) {
                 const docRef = doc(db, "transaksi", docId);
                 const docSnap = await getDoc(docRef);
@@ -360,10 +370,8 @@
                     document.getElementById('tanggal').value = data.tanggal;
                     subKegiatanSelect.value = data.kodeSubKegiatan;
                     document.getElementById('namaKegiatanInput').value = data.namaKegiatan;
-
                     komponenList.innerHTML = '';
                     data.rincian.forEach(item => createKomponenItem(item));
-                    
                     updateTotal();
                     cancelEditBtn.style.display = 'inline-block';
                     window.scrollTo(0, 0);
