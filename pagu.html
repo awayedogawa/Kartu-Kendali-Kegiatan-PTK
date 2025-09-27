@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Pagu - Kartu Kendali PTK</title>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
         
         :root {
             --primary-color: #0d6efd;
+            --success-color: #198754;
             --danger-color: #dc3545;
             --warning-color: #ffc107;
             --background-color: #f4f7f6;
@@ -58,9 +60,17 @@
         .form-group label { margin-bottom: 8px; font-weight: 500; font-size: 0.9em; }
         .form-group input { padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 1em; }
         
-        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 1em; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 1em; transition: background-color 0.2s; }
         .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-success { background-color: var(--success-color); color: white; }
         .btn-submit { margin-top: 20px; }
+        .btn:disabled { background-color: #6c757d; cursor: not-allowed; }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header-actions .btn { margin-left: 10px; font-size: 0.9em; padding: 8px 15px; }
+        
+        #uploadLabel { cursor: pointer; }
+        #uploadFile { display: none; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
@@ -110,7 +120,14 @@
         </div>
 
         <div class="card">
-            <h2>Daftar Pagu Anggaran</h2>
+            <div class="card-header">
+                <h2>Daftar Pagu Anggaran</h2>
+                <div class="header-actions">
+                    <button id="downloadBtn" class="btn btn-primary">Download Template</button>
+                    <label for="uploadFile" id="uploadLabel" class="btn btn-success">Upload Template</label>
+                    <input type="file" id="uploadFile" accept=".xlsx, .xls">
+                </div>
+            </div>
             <table>
                 <thead>
                     <tr>
@@ -129,7 +146,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
@@ -161,6 +178,10 @@
 
         const paguForm = document.getElementById('paguForm');
         const paguTableBody = document.getElementById('paguTableBody');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const uploadFile = document.getElementById('uploadFile');
+        const uploadLabel = document.getElementById('uploadLabel');
+        
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 
         // --- Create (Menambah Pagu Baru) ---
@@ -185,7 +206,7 @@
 
         // --- Read (Membaca dan Menampilkan Pagu) ---
         onSnapshot(collection(db, "sub_kegiatan"), (snapshot) => {
-            paguTableBody.innerHTML = ''; // Kosongkan tabel sebelum diisi
+            paguTableBody.innerHTML = '';
             snapshot.forEach(doc => {
                 const data = doc.data();
                 const row = document.createElement('tr');
@@ -216,6 +237,77 @@
                     }
                 }
             }
+        });
+
+        // ==========================================================
+        // BARU: Logika untuk Download Template Excel
+        // ==========================================================
+        downloadBtn.addEventListener('click', () => {
+            const templateData = [{
+                kodeRekening: "1.01.01.2.02.0001",
+                namaKegiatan: "Contoh Nama Kegiatan",
+                paguAnggaran: 50000000,
+                tahunAnggaran: 2025
+            }];
+            const worksheet = XLSX.utils.json_to_sheet(templateData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Template Pagu");
+            XLSX.writeFile(workbook, "template_pagu.xlsx");
+        });
+
+        // ==========================================================
+        // BARU: Logika untuk Upload Template Excel
+        // ==========================================================
+        uploadFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            uploadLabel.textContent = 'Memproses...';
+            uploadLabel.disabled = true;
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const data = event.target.result;
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (jsonData.length === 0) {
+                        alert("File Excel kosong atau format tidak sesuai.");
+                        return;
+                    }
+
+                    if (confirm(`Ditemukan ${jsonData.length} baris data. Apakah Anda ingin mengunggah semua data ini?`)) {
+                        // Gunakan batch write untuk efisiensi
+                        const batch = writeBatch(db);
+                        jsonData.forEach(item => {
+                            // Validasi dasar
+                            if (item.kodeRekening && item.namaKegiatan && item.paguAnggaran && item.tahunAnggaran) {
+                                const docRef = doc(collection(db, "sub_kegiatan"));
+                                batch.set(docRef, {
+                                    kodeRekening: String(item.kodeRekening),
+                                    namaKegiatan: String(item.namaKegiatan),
+                                    paguAnggaran: Number(item.paguAnggaran),
+                                    tahunAnggaran: Number(item.tahunAnggaran)
+                                });
+                            }
+                        });
+                        
+                        await batch.commit();
+                        alert(`${jsonData.length} data pagu berhasil diunggah.`);
+                    }
+                } catch (error) {
+                    console.error("Error processing file: ", error);
+                    alert("Gagal memproses file. Pastikan formatnya benar.");
+                } finally {
+                    uploadLabel.textContent = 'Upload Template';
+                    uploadLabel.disabled = false;
+                    uploadFile.value = ''; // Reset input file
+                }
+            };
+            reader.readAsArrayBuffer(file);
         });
 
     </script>
