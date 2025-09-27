@@ -12,6 +12,7 @@
             --primary-color: #0d6efd;
             --success-color: #198754;
             --danger-color: #dc3545;
+            --warning-color: #ffc107;
             --background-color: #f4f7f6;
             --card-background: #ffffff;
             --text-color: #212529;
@@ -59,8 +60,23 @@
         .total-pagu { text-align: right; }
         .pagu-rekening { text-align: right; font-weight: normal; }
 
-        .action-buttons { text-align: right; }
-        .action-buttons button { padding: 5px 10px; font-size: 0.9em; }
+        .action-buttons { text-align: right; white-space: nowrap; }
+        .btn-icon {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 5px;
+        }
+        .btn-icon:hover { background-color: #e9ecef; }
+        .btn-icon svg { width: 18px; height: 18px; }
+        .icon-edit { color: var(--primary-color); }
+        .icon-delete { color: var(--danger-color); }
+
     </style>
 </head>
 <body>
@@ -116,7 +132,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- Security & UI Setup ---
         const userRole = sessionStorage.getItem('userRole');
         const userName = sessionStorage.getItem('userName');
         if (userRole !== 'admin') {
@@ -132,11 +147,26 @@
 
         const paguTableBody = document.getElementById('paguTableBody');
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
-
-        // --- Read & Render Data ---
+        
         const paguCollection = collection(db, "anggaran");
         onSnapshot(paguCollection, (snapshot) => {
-            const allData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            let allData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            // ==========================================================
+            // BARU: Logika untuk mengurutkan data
+            // ==========================================================
+            allData.sort((a, b) => {
+                // Urutkan berdasarkan Kode Sub Kegiatan
+                if (a.kodeSubKegiatan < b.kodeSubKegiatan) return -1;
+                if (a.kodeSubKegiatan > b.kodeSubKegiatan) return 1;
+                
+                // Jika Kode Sub Kegiatan sama, urutkan berdasarkan Kode Rekening
+                if (a.kodeRekening < b.kodeRekening) return -1;
+                if (a.kodeRekening > b.kodeRekening) return 1;
+
+                return 0;
+            });
+
             const groupedData = allData.reduce((acc, item) => {
                 const key = item.kodeSubKegiatan;
                 if (!acc[key]) {
@@ -152,7 +182,8 @@
             }, {});
 
             paguTableBody.innerHTML = '';
-            for (const kode in groupedData) {
+            // Menggunakan Object.keys(groupedData).sort() agar grupnya juga terurut
+            Object.keys(groupedData).sort().forEach(kode => {
                 const group = groupedData[kode];
                 const parentRow = document.createElement('tr');
                 parentRow.className = 'parent-row';
@@ -161,7 +192,9 @@
                     <td><span class="toggle-icon"></span>${kode} - ${group.namaSubKegiatan}</td>
                     <td class="total-pagu">${formatRupiah(group.totalPagu)}</td>
                     <td class="action-buttons">
-                        <button class="btn btn-danger btn-sm" data-delete-group="${kode}">Hapus Sub</button>
+                        <button class="btn-icon icon-delete" title="Hapus Sub Kegiatan" data-delete-group="${kode}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
                     </td>
                 `;
                 paguTableBody.appendChild(parentRow);
@@ -174,48 +207,53 @@
                         <td>${item.kodeRekening} - ${item.uraian}</td>
                         <td class="pagu-rekening">${formatRupiah(item.paguAnggaran)}</td>
                         <td class="action-buttons">
-                             <button class="btn btn-danger btn-sm" data-delete-item="${item.id}">Hapus</button>
+                             <button class="btn-icon icon-edit" title="Edit Item" data-edit-item="${item.id}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                             </button>
+                             <button class="btn-icon icon-delete" title="Hapus Item" data-delete-item="${item.id}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                             </button>
                         </td>
                     `;
                     paguTableBody.appendChild(childRow);
                 });
-            }
+            });
         });
 
-        // --- Event Delegation for Toggling and Deleting ---
         paguTableBody.addEventListener('click', async (e) => {
-            const target = e.target;
-
-            if (target.closest('.parent-row')) {
-                const parentRow = target.closest('.parent-row');
-                parentRow.classList.toggle('expanded');
-                const kode = parentRow.dataset.kode;
-                const children = paguTableBody.querySelectorAll(`.child-row[data-parent-kode="${kode}"]`);
-                children.forEach(child => child.classList.toggle('sibling-expanded'));
+            const button = e.target.closest('.btn-icon');
+            if (!button) {
+                 if (e.target.closest('.parent-row')) {
+                    const parentRow = e.target.closest('.parent-row');
+                    parentRow.classList.toggle('expanded');
+                    const kode = parentRow.dataset.kode;
+                    const children = paguTableBody.querySelectorAll(`.child-row[data-parent-kode="${kode}"]`);
+                    children.forEach(child => child.classList.toggle('sibling-expanded'));
+                }
+                return;
             }
-
-            if (target.dataset.deleteItem) {
-                const docId = target.dataset.deleteItem;
+            if (button.dataset.deleteItem) {
+                const docId = button.dataset.deleteItem;
                 if (confirm('Yakin ingin menghapus item rekening ini?')) {
                     await deleteDoc(doc(db, "anggaran", docId));
-                    alert('Item berhasil dihapus.');
                 }
             }
-
-            if (target.dataset.deleteGroup) {
-                const kodeSub = target.dataset.deleteGroup;
+            if (button.dataset.editItem) {
+                const docId = button.dataset.editItem;
+                alert(`Fitur edit untuk item dengan ID: ${docId} belum diimplementasikan.`);
+            }
+            if (button.dataset.deleteGroup) {
+                const kodeSub = button.dataset.deleteGroup;
                 if (confirm(`PERINGATAN: Ini akan menghapus Sub Kegiatan "${kodeSub}" dan SEMUA rincian rekening di dalamnya. Lanjutkan?`)) {
                     const q = query(paguCollection, where("kodeSubKegiatan", "==", kodeSub));
                     const snapshot = await getDocs(q);
                     const batch = writeBatch(db);
                     snapshot.docs.forEach(doc => batch.delete(doc.ref));
                     await batch.commit();
-                    alert('Sub Kegiatan dan semua rinciannya berhasil dihapus.');
                 }
             }
         });
-
-        // --- Download & Upload Logic ---
+        
         document.getElementById('downloadBtn').addEventListener('click', () => {
             const templateData = [{
                 kodeSubKegiatan: "1.01.01.2.02",
@@ -238,9 +276,6 @@
             reader.onload = async (event) => {
                 try {
                     const data = event.target.result;
-                    // ==========================================================
-                    // PERBAIKAN: Mengganti tipe 'array' menjadi 'buffer'
-                    // ==========================================================
                     const workbook = XLSX.read(data, { type: 'buffer' });
                     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
@@ -263,7 +298,7 @@
                         alert(`${jsonData.length} data berhasil diunggah.`);
                     }
                 } catch (error) {
-                    console.error(error); // Tampilkan error di console untuk debug
+                    console.error(error);
                     alert("Gagal memproses file. Pastikan format kolom sesuai template.");
                 } finally {
                     document.getElementById('uploadFile').value = '';
