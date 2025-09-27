@@ -35,12 +35,7 @@
         .card { background-color: var(--card-background); padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 30px; }
         .card h2 { margin-top: 0; }
         
-        /* DIPERBARUI: Mengubah form menjadi bersusun ke bawah */
-        .form-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+        .form-container { display: flex; flex-direction: column; gap: 15px; }
         .form-group { display: flex; flex-direction: column; }
         .form-group label { margin-bottom: 8px; font-weight: 500; font-size: 0.9em; }
         .form-group input, .form-group select { 
@@ -49,13 +44,12 @@
             border-radius: 5px; 
             font-size: 1em; 
             font-family: 'Poppins', sans-serif;
-            max-width: 500px; /* Batas lebar maksimum untuk input */
+            max-width: 500px;
         }
-        #tanggal { max-width: 200px; } /* Lebar khusus untuk tanggal */
+        #tanggal { max-width: 200px; }
         
         .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 1em; }
         .btn-primary { background-color: var(--primary-color); color: white; }
-        .btn-success { background-color: var(--success-color); color: white; }
         .btn-danger { background-color: var(--danger-color); color: white; }
         .btn-submit { margin-top: 20px; }
 
@@ -139,7 +133,7 @@
                     <label style="font-weight: 500;">Rincian Komponen</label>
                     <div id="komponen-list">
                         <div class="komponen-item">
-                            <select class="komponen-pilihan" required><option value="">Pilih Komponen</option></select>
+                            <select class="komponen-pilihan" required><option value="">Pilih Kode Rekening Dulu</option></select>
                             <input type="number" class="komponen-volume" placeholder="Volume" min="1" required>
                             <input type="text" class="komponen-satuan" placeholder="Satuan" required>
                             <input type="text" class="komponen-harga" placeholder="Harga Satuan (Rp)" readonly>
@@ -221,21 +215,29 @@
         });
         
         onSnapshot(collection(db, "komponen"), (snapshot) => {
-            dataKomponen = snapshot.docs.map(doc => doc.data());
-            updateKomponenDropdowns();
+            dataKomponen = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Jangan panggil updateKomponenDropdowns di sini, agar tidak menampilkan semua komponen di awal
         });
-
-        function updateKomponenDropdowns() {
-            document.querySelectorAll('.komponen-pilihan').forEach(dropdown => {
+        
+        // DIPERBARUI: Fungsi ini sekarang menerima kode rekening sebagai filter
+        function updateKomponenDropdowns(filterKodeRekening = '') {
+            const dropdowns = document.querySelectorAll('.komponen-pilihan');
+            const filteredKomponen = dataKomponen.filter(item => item.kodeRekening === filterKodeRekening);
+            
+            dropdowns.forEach(dropdown => {
                 const currentValue = dropdown.value;
                 dropdown.innerHTML = '<option value="">Pilih Komponen</option>';
-                dataKomponen.sort((a,b) => a.nama.localeCompare(b.nama)).forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.nama;
-                    option.textContent = item.nama;
-                    option.dataset.harga = item.harga;
-                    dropdown.appendChild(option);
-                });
+                if (filteredKomponen.length === 0) {
+                     dropdown.innerHTML = '<option value="">Tidak ada komponen</option>';
+                } else {
+                    filteredKomponen.sort((a,b) => a.nama.localeCompare(b.nama)).forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.nama;
+                        option.textContent = item.nama;
+                        option.dataset.harga = item.harga;
+                        dropdown.appendChild(option);
+                    });
+                }
                 dropdown.value = currentValue;
             });
         }
@@ -249,11 +251,22 @@
                     rekeningTerkait.sort((a,b) => a.kodeRekening.localeCompare(b.kodeRekening)).forEach(item => {
                         const option = document.createElement('option');
                         option.value = item.id;
+                        option.dataset.kode = item.kodeRekening; // Simpan kode rekening di data-attribute
                         option.textContent = `${item.kodeRekening} - ${item.uraian} (${formatRupiah(item.paguAnggaran)})`;
                         kodeRekeningSelect.appendChild(option);
                     });
                 }
+                 // Reset komponen dropdown
+                updateKomponenDropdowns();
             }
+
+            // BARU: Panggil filter komponen saat kode rekening diganti
+            if(e.target.id === 'kodeRekening') {
+                const selectedOption = e.target.options[e.target.selectedIndex];
+                const filter = selectedOption.dataset.kode || '';
+                updateKomponenDropdowns(filter);
+            }
+
             if (e.target.classList.contains('komponen-pilihan')) {
                 const selectedOption = e.target.options[e.target.selectedIndex];
                 e.target.closest('.komponen-item').querySelector('.komponen-harga').value = selectedOption.dataset.harga || 0;
@@ -273,14 +286,18 @@
             const newItem = document.createElement('div');
             newItem.className = 'komponen-item';
             newItem.innerHTML = `
-                <select class="komponen-pilihan" required><option value="">Pilih Komponen</option></select>
+                <select class="komponen-pilihan" required><option value="">Pilih Kode Rekening Dulu</option></select>
                 <input type="number" class="komponen-volume" placeholder="Volume" min="1" required>
                 <input type="text" class="komponen-satuan" placeholder="Satuan" required>
                 <input type="text" class="komponen-harga" placeholder="Harga Satuan (Rp)" readonly>
                 <button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); updateTotal()">X</button>
             `;
             komponenList.appendChild(newItem);
-            updateKomponenDropdowns();
+            // Panggil lagi untuk mengisi dropdown baru dengan komponen yang terfilter
+            const currentKodeRekening = kodeRekeningSelect.options[kodeRekeningSelect.selectedIndex]?.dataset.kode;
+            if(currentKodeRekening) {
+                updateKomponenDropdowns(currentKodeRekening);
+            }
         });
 
         window.updateTotal = function() {
@@ -319,6 +336,7 @@
                 docAnggaranId: docAnggaranId,
                 kodeSubKegiatan: anggaranDipilih.kodeSubKegiatan,
                 namaSubKegiatan: anggaranDipilih.namaSubKegiatan,
+                kodeRekening: anggaranDipilih.kodeRekening,
                 diinputOleh: userName,
                 timestamp: new Date()
             };
@@ -364,9 +382,7 @@
         async function updateStatus(docId, newStatus) {
             const docRef = doc(db, "transaksi", docId);
             try {
-                await updateDoc(docRef, {
-                    status: newStatus
-                });
+                await updateDoc(docRef, { status: newStatus });
             } catch (error) {
                 console.error("Gagal update status: ", error);
                 alert("Gagal memperbarui status.");
