@@ -12,8 +12,17 @@
     </style>
 </head>
 <body>
-    <header class="header"></header>
-
+    <header class="header">
+        <div class="logo">SI-KENDALI PTK</div>
+        <div class="user-info">
+            <a href="index.html" class="btn-header" style="background-color: var(--primary-color);">&#8592; Kembali</a>
+            <div class="user-details">
+                <span class="name" id="userNameDisplay">Nama</span>
+                <span class="role" id="userRoleDisplay">Role</span>
+            </div>
+            <button id="logoutBtn" class="btn-header" style="background-color: var(--danger-color);">Logout</button>
+        </div>
+    </header>
     <main class="container">
         <div class="card">
             <div class="card-header">
@@ -48,26 +57,11 @@
             <form id="paguForm">
                 <input type="hidden" id="editId">
                 <div class="form-grid">
-                    <div class="form-group">
-                        <label for="kodeSubKegiatan">Kode Sub Kegiatan</label>
-                        <input type="text" id="kodeSubKegiatan" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="namaSubKegiatan">Nama Sub Kegiatan</label>
-                        <input type="text" id="namaSubKegiatan" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="kodeRekening">Kode Rekening</label>
-                        <input type="text" id="kodeRekening" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="uraian">Uraian Kode Rekening</label>
-                        <input type="text" id="uraian" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="paguAnggaran">Pagu Anggaran (Rp)</label>
-                        <input type="number" id="paguAnggaran" required>
-                    </div>
+                    <div class="form-group"><label for="kodeSubKegiatan">Kode Sub Kegiatan</label><input type="text" id="kodeSubKegiatan" required></div>
+                    <div class="form-group"><label for="namaSubKegiatan">Nama Sub Kegiatan</label><input type="text" id="namaSubKegiatan" required></div>
+                    <div class="form-group"><label for="kodeRekening">Kode Rekening</label><input type="text" id="kodeRekening" required></div>
+                    <div class="form-group"><label for="uraian">Uraian Kode Rekening</label><input type="text" id="uraian" required></div>
+                    <div class="form-group"><label for="paguAnggaran">Pagu Anggaran (Rp)</label><input type="number" id="paguAnggaran" required></div>
                     <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Simpan</button>
                 </div>
             </form>
@@ -89,7 +83,13 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
-        // ... (UI Setup dan variabel lainnya)
+        const userRole = sessionStorage.getItem('userRole');
+        const userName = sessionStorage.getItem('userName');
+        if (userRole !== 'admin') { window.location.href = 'index.html'; }
+        document.getElementById('userNameDisplay').textContent = userName;
+        document.getElementById('userRoleDisplay').textContent = userRole;
+        document.getElementById('logoutBtn').addEventListener('click', () => { sessionStorage.clear(); window.location.href = 'login.html'; });
+
         const paguTableBody = document.getElementById('paguTableBody');
         const paguModal = document.getElementById('paguModal');
         const paguForm = document.getElementById('paguForm');
@@ -98,7 +98,9 @@
         const addPaguBtn = document.getElementById('addPaguBtn');
         const closeBtn = document.querySelector('.close-btn');
 
-        // --- Logika Buka/Tutup Modal ---
+        // FUNGSI YANG HILANG DIKEMBALIKAN DI SINI
+        const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+
         addPaguBtn.onclick = () => {
             modalTitle.textContent = 'Tambah Pagu Baru';
             paguForm.reset();
@@ -112,7 +114,6 @@
             }
         };
 
-        // ... (Fungsi renderData yang sudah ada) ...
         function renderData() {
             onSnapshot(collection(db, "anggaran"), (anggaranSnapshot) => {
                 const allAnggaran = anggaranSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -153,10 +154,7 @@
                             const sisaItem = item.paguAnggaran - item.terpakai;
                             const childRow = document.createElement('tr');
                             childRow.className = 'child-row'; childRow.dataset.parentKode = kode;
-                            childRow.innerHTML = `<td>${item.kodeRekening} - ${item.uraian}</td><td class="currency">${formatRupiah(item.paguAnggaran)}</td><td class="currency">${formatRupiah(item.terpakai)}</td><td class="currency">${formatRupiah(sisaItem)}</td><td class="action-buttons">
-                                <button class="btn-icon icon-edit" title="Edit Item" data-edit-id="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                                <button class="btn-icon icon-delete" title="Hapus Item" data-delete-item="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                            </td>`;
+                            childRow.innerHTML = `<td>${item.kodeRekening} - ${item.uraian}</td><td class="currency">${formatRupiah(item.paguAnggaran)}</td><td class="currency">${formatRupiah(item.terpakai)}</td><td class="currency">${formatRupiah(sisaItem)}</td><td class="action-buttons"><button class="btn-icon icon-edit" title="Edit Item" data-edit-id="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button><button class="btn-icon icon-delete" title="Hapus Item" data-delete-item="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>`;
                             paguTableBody.appendChild(childRow);
                         });
                     });
@@ -165,7 +163,6 @@
         }
         renderData();
 
-        // --- Logika Simpan (Create & Update) ---
         paguForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = editIdInput.value;
@@ -176,20 +173,11 @@
                 uraian: document.getElementById('uraian').value,
                 paguAnggaran: Number(document.getElementById('paguAnggaran').value),
             };
-
             try {
-                if (id) { // Update
-                    await updateDoc(doc(db, "anggaran", id), data);
-                    alert('Data pagu berhasil diperbarui.');
-                } else { // Create
-                    await addDoc(collection(db, "anggaran"), data);
-                    alert('Data pagu baru berhasil disimpan.');
-                }
+                if (id) { await updateDoc(doc(db, "anggaran", id), data); alert('Data pagu berhasil diperbarui.'); }
+                else { await addDoc(collection(db, "anggaran"), data); alert('Data pagu baru berhasil disimpan.'); }
                 paguModal.style.display = 'none';
-            } catch (error) {
-                alert('Gagal menyimpan data.');
-                console.error(error);
-            }
+            } catch (error) { alert('Gagal menyimpan data.'); console.error(error); }
         });
 
         paguTableBody.addEventListener('click', async (e) => {
@@ -202,7 +190,6 @@
                 }
                 return;
             }
-            // Logika Edit
             if (button.dataset.editId) {
                 const docId = button.dataset.editId;
                 const docRef = doc(db, "anggaran", docId);
@@ -219,13 +206,23 @@
                     paguModal.style.display = 'flex';
                 }
             }
-            // Logika Hapus
-            if (button.dataset.deleteItem || button.dataset.deleteGroup) {
-                // ... (logika hapus yang sudah ada) ...
+            if (button.dataset.deleteItem) {
+                const docId = button.dataset.deleteItem;
+                if(confirm('Yakin ingin menghapus item pagu ini?')){ await deleteDoc(doc(db, "anggaran", docId)); }
+            }
+            if (button.dataset.deleteGroup) {
+                const kodeSub = button.dataset.deleteGroup;
+                if(confirm(`PERINGATAN: Ini akan menghapus Sub Kegiatan "${kodeSub}" dan SEMUA rincian pagu di dalamnya. Lanjutkan?`)){
+                    const q = query(collection(db, "anggaran"), where("kodeSubKegiatan", "==", kodeSub));
+                    const snapshot = await getDocs(q);
+                    const batch = writeBatch(db);
+                    snapshot.docs.forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+                }
             }
         });
-
-        // ... (sisa kode lainnya seperti upload, clear data, dll tetap sama) ...
+        
+        // ... (sisa kode upload, clear data, dll)
     </script>
 </body>
 </html>
