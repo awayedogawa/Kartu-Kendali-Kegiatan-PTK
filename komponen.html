@@ -6,108 +6,14 @@
     <title>Manajemen Komponen - Kartu Kendali PTK</title>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <style>
+        /* ... (CSS tetap sama seperti sebelumnya) ... */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-        
-        :root {
-            --primary-color: #0d6efd;
-            --success-color: #198754;
-            --danger-color: #dc3545;
-            --info-color: #6c757d;
-            --background-color: #f4f7f6;
-            --card-background: #ffffff;
-            --text-color: #212529;
-            --text-muted: #6c757d;
-            --border-color: #e9ecef;
-        }
-
-        body { font-family: 'Poppins', sans-serif; background-color: var(--background-color); color: var(--text-color); margin: 0; }
-
-        .header { background-color: var(--card-background); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .header .logo { font-weight: 700; font-size: 1.2em; color: var(--primary-color); }
-        .header .user-info { display: flex; align-items: center; gap: 15px; }
-        .header .user-details { text-align: right; }
-        .header .user-details .name { font-weight: 600; display: block; }
-        .header .user-details .role { font-size: 0.8em; color: var(--text-muted); text-transform: capitalize; }
-        
-        .btn-header { background-color: var(--info-color); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 500; text-decoration: none; font-size: 1em; }
-
-        .container { padding: 30px; }
-        .card { background-color: var(--card-background); padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        .card-header h2 { margin: 0; }
-        .header-actions { display: flex; flex-wrap: wrap; gap: 10px; }
-        .header-actions .btn { margin-left: 0; font-size: 0.9em; padding: 8px 15px; }
-
-        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 1em; }
-        .btn-primary { background-color: var(--primary-color); color: white; }
-        .btn-success { background-color: var(--success-color); color: white; }
-        .btn-danger { background-color: var(--danger-color); color: white; }
-        #uploadLabel { cursor: pointer; }
-        #uploadFile { display: none; }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 600px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            position: relative;
-        }
-        .close-btn {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 28px;
-            font-weight: bold;
-            color: #aaa;
-            cursor: pointer;
-        }
-        .close-btn:hover { color: #333; }
-
-        .form-grid { display: flex; flex-direction: column; gap: 15px; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { margin-bottom: 8px; font-weight: 500; font-size: 0.9em; }
-        .form-group input, .form-group select { padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 1em; }
-
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { background-color: #f8f9fa; font-weight: 600; }
-        td.harga { text-align: right; }
-        .action-buttons { text-align: right; white-space: nowrap; }
-        .btn-icon { background-color: transparent; border: none; cursor: pointer; padding: 6px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-left: 5px; }
-        .btn-icon:hover { background-color: #e9ecef; }
-        .btn-icon svg { width: 18px; height: 18px; }
-        .icon-delete { color: var(--danger-color); }
-
+        :root{--primary-color:#0d6efd;--success-color:#198754;--danger-color:#dc3545;--info-color:#6c757d;--background-color:#f4f7f6;--card-background:#ffffff;--text-color:#212529;--text-muted:#6c757d;--border-color:#e9ecef;}body{font-family:'Poppins',sans-serif;background-color:var(--background-color);color:var(--text-color);margin:0}.header{background-color:var(--card-background);padding:15px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,0.05)}.header .logo{font-weight:700;font-size:1.2em;color:var(--primary-color)}.header .user-info{display:flex;align-items:center;gap:15px}.header .user-details{text-align:right}.header .user-details .name{font-weight:600;display:block}.header .user-details .role{font-size:.8em;color:var(--text-muted);text-transform:capitalize}.btn-header{background-color:var(--info-color);color:#fff;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;font-weight:500;text-decoration:none;font-size:1em}.container{padding:30px}.card{background-color:var(--card-background);padding:25px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.08)}.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}.card-header h2{margin:0}.header-actions{display:flex;flex-wrap:wrap;gap:10px}.header-actions .btn{margin-left:0;font-size:.9em;padding:8px 15px}.btn{padding:10px 20px;border:none;border-radius:5px;cursor:pointer;font-weight:500;font-size:1em}.btn-primary{background-color:var(--primary-color);color:#fff}.btn-success{background-color:var(--success-color);color:#fff}.btn-danger{background-color:var(--danger-color);color:#fff}#uploadLabel{cursor:pointer}#uploadFile{display:none}.modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,0.5);justify-content:center;align-items:center}.modal-content{background-color:#fff;padding:30px;border-radius:8px;width:90%;max-width:600px;box-shadow:0 5px 15px rgba(0,0,0,0.3);position:relative}.close-btn{position:absolute;top:15px;right:20px;font-size:28px;font-weight:700;color:#aaa;cursor:pointer}.close-btn:hover{color:#333}.form-grid{display:flex;flex-direction:column;gap:15px}.form-group{display:flex;flex-direction:column}.form-group label{margin-bottom:8px;font-weight:500;font-size:.9em}.form-group input,.form-group select{padding:10px;border:1px solid var(--border-color);border-radius:5px;font-size:1em}table{width:100%;border-collapse:collapse}th,td{padding:12px 15px;text-align:left;border-bottom:1px solid var(--border-color)}th{background-color:#f8f9fa;font-weight:600}td.harga{text-align:right}.action-buttons{text-align:right;white-space:nowrap}.btn-icon{background-color:transparent;border:none;cursor:pointer;padding:6px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-left:5px}.btn-icon:hover{background-color:#e9ecef}.btn-icon svg{width:18px;height:18px}.icon-edit{color:var(--primary-color)}.icon-delete{color:var(--danger-color)}
     </style>
 </head>
 <body>
 
-    <header class="header">
-        <div class="logo">SI-KENDALI PTK</div>
-        <div class="user-info">
-            <a href="index.html" class="btn-header" style="background-color: var(--primary-color);">&#8592; Kembali</a>
-            <div class="user-details">
-                <span class="name" id="userNameDisplay">Nama Pengguna</span>
-                <span class="role" id="userRoleDisplay">Peran</span>
-            </div>
-            <button id="logoutBtn" class="btn-header" style="background-color: var(--danger-color);">Logout</button>
-        </div>
-    </header>
+    <header class="header"></header>
 
     <main class="container">
         <div class="card">
@@ -140,8 +46,9 @@
     <div id="komponenModal" class="modal">
         <div class="modal-content">
             <span class="close-btn">&times;</span>
-            <h2>Tambah Komponen Baru</h2>
+            <h2 id="modalTitle">Tambah Komponen Baru</h2>
             <form id="komponenForm">
+                <input type="hidden" id="editId">
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="kodeRekening">Pilih Kode Rekening</label>
@@ -170,7 +77,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, deleteDoc, writeBatch, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, deleteDoc, writeBatch, addDoc, updateDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
@@ -180,7 +87,6 @@
             messagingSenderId: "694993604999",
             appId: "1:694993604999:web:83eaf3af3ddf0c5d0bc348322"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
@@ -203,11 +109,17 @@
         const komponenModal = document.getElementById('komponenModal');
         const addKomponenBtn = document.getElementById('addKomponenBtn');
         const closeBtn = document.querySelector('.close-btn');
+        const modalTitle = document.getElementById('modalTitle');
+        const editIdInput = document.getElementById('editId');
         const clearDataBtn = document.getElementById('clearDataBtn');
-
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 
-        addKomponenBtn.onclick = () => komponenModal.style.display = 'flex';
+        addKomponenBtn.onclick = () => {
+            modalTitle.textContent = 'Tambah Komponen Baru';
+            komponenForm.reset();
+            editIdInput.value = '';
+            komponenModal.style.display = 'flex';
+        };
         closeBtn.onclick = () => komponenModal.style.display = 'none';
         window.onclick = (event) => {
             if (event.target == komponenModal) {
@@ -236,12 +148,16 @@
             komponenTableBody.innerHTML = '';
             allData.forEach(item => {
                 const row = document.createElement('tr');
+                // DIUBAH: Menambahkan tombol ikon edit
                 row.innerHTML = `
                     <td>${item.kodeRekening || ''}</td>
                     <td>${item.nama}</td>
                     <td class="harga">${formatRupiah(item.harga)}</td>
                     <td>${item.satuan || ''}</td>
                     <td class="action-buttons">
+                        <button class="btn-icon icon-edit" title="Edit Komponen" data-id="${item.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
                         <button class="btn-icon icon-delete" title="Hapus Komponen" data-id="${item.id}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>
@@ -251,17 +167,24 @@
             });
         });
         
+        // DIUBAH: Form submit sekarang bisa create dan update
         komponenForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const newKomponen = {
+            const id = editIdInput.value;
+            const data = {
                 kodeRekening: document.getElementById('kodeRekening').value,
                 nama: document.getElementById('namaKomponen').value,
                 satuan: document.getElementById('satuanKomponen').value,
                 harga: Number(document.getElementById('hargaKomponen').value)
             };
             try {
-                await addDoc(komponenCollection, newKomponen);
-                alert('Komponen baru berhasil disimpan.');
+                if (id) { // Mode Update
+                    await updateDoc(doc(db, "komponen", id), data);
+                    alert('Komponen berhasil diperbarui.');
+                } else { // Mode Create
+                    await addDoc(komponenCollection, data);
+                    alert('Komponen baru berhasil disimpan.');
+                }
                 komponenForm.reset();
                 komponenModal.style.display = 'none';
             } catch (error) {
@@ -270,13 +193,34 @@
             }
         });
 
+        // DIUBAH: Event listener di tabel bisa menangani edit dan hapus
         komponenTableBody.addEventListener('click', async (e) => {
             const button = e.target.closest('.btn-icon');
             if(button && button.dataset.id) {
                 const docId = button.dataset.id;
-                if(confirm('Yakin ingin menghapus komponen ini?')){
-                    await deleteDoc(doc(db, "komponen", docId));
-                    alert('Komponen berhasil dihapus.');
+                
+                // Logika Hapus
+                if (button.classList.contains('icon-delete')) {
+                    if(confirm('Yakin ingin menghapus komponen ini?')){
+                        await deleteDoc(doc(db, "komponen", docId));
+                        alert('Komponen berhasil dihapus.');
+                    }
+                }
+                
+                // Logika Edit
+                if (button.classList.contains('icon-edit')) {
+                    const docRef = doc(db, "komponen", docId);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        modalTitle.textContent = 'Edit Data Komponen';
+                        editIdInput.value = docId;
+                        document.getElementById('kodeRekening').value = data.kodeRekening;
+                        document.getElementById('namaKomponen').value = data.nama;
+                        document.getElementById('satuanKomponen').value = data.satuan;
+                        document.getElementById('hargaKomponen').value = data.harga;
+                        komponenModal.style.display = 'flex';
+                    }
                 }
             }
         });
@@ -329,7 +273,6 @@
             reader.readAsArrayBuffer(file);
         });
 
-        // BARU: Logika untuk tombol Bersihkan Data
         clearDataBtn.addEventListener('click', async () => {
             if (confirm('PERINGATAN: Anda akan menghapus SEMUA data komponen. Aksi ini tidak dapat dibatalkan. Lanjutkan?')) {
                 try {
@@ -346,7 +289,6 @@
                 }
             }
         });
-
     </script>
 </body>
 </html>
