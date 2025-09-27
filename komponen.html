@@ -43,9 +43,8 @@
         #uploadLabel { cursor: pointer; }
         #uploadFile { display: none; }
         
-        /* BARU: Style untuk Modal/Pop-up */
         .modal {
-            display: none; /* Sembunyi by default */
+            display: none;
             position: fixed;
             z-index: 1000;
             left: 0;
@@ -81,7 +80,6 @@
         .form-group { display: flex; flex-direction: column; }
         .form-group label { margin-bottom: 8px; font-weight: 500; font-size: 0.9em; }
         .form-group input, .form-group select { padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 1em; }
-
 
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
@@ -125,7 +123,8 @@
                     <tr>
                         <th>Kode Rekening</th>
                         <th>Nama Komponen</th>
-                        <th class="harga">Harga Satuan</th>
+                        <th>Satuan</th>
+                        <th class="harga">Harga</th>
                         <th class="action-buttons">Aksi</th>
                     </tr>
                 </thead>
@@ -152,7 +151,11 @@
                         <input type="text" id="namaKomponen" required>
                     </div>
                     <div class="form-group">
-                        <label for="hargaKomponen">Harga Satuan (Rp)</label>
+                        <label for="satuanKomponen">Satuan</label>
+                        <input type="text" id="satuanKomponen" placeholder="Contoh: OH, OK, Buah, Rim" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="hargaKomponen">Harga (Rp)</label>
                         <input type="number" id="hargaKomponen" required>
                     </div>
                     <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Simpan</button>
@@ -200,7 +203,6 @@
 
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 
-        // BARU: Logika untuk buka/tutup Pop-up
         addKomponenBtn.onclick = () => komponenModal.style.display = 'flex';
         closeBtn.onclick = () => komponenModal.style.display = 'none';
         window.onclick = (event) => {
@@ -230,9 +232,11 @@
             komponenTableBody.innerHTML = '';
             allData.forEach(item => {
                 const row = document.createElement('tr');
+                // DIUBAH: Menampilkan kolom satuan
                 row.innerHTML = `
                     <td>${item.kodeRekening || ''}</td>
                     <td>${item.nama}</td>
+                    <td>${item.satuan || ''}</td>
                     <td class="harga">${formatRupiah(item.harga)}</td>
                     <td class="action-buttons">
                         <button class="btn-icon icon-delete" title="Hapus Komponen" data-id="${item.id}">
@@ -249,13 +253,14 @@
             const newKomponen = {
                 kodeRekening: document.getElementById('kodeRekening').value,
                 nama: document.getElementById('namaKomponen').value,
+                satuan: document.getElementById('satuanKomponen').value, // BARU: Simpan satuan
                 harga: Number(document.getElementById('hargaKomponen').value)
             };
             try {
                 await addDoc(komponenCollection, newKomponen);
                 alert('Komponen baru berhasil disimpan.');
                 komponenForm.reset();
-                komponenModal.style.display = 'none'; // Tutup pop-up setelah berhasil
+                komponenModal.style.display = 'none';
             } catch (error) {
                 alert('Gagal menyimpan komponen.');
                 console.error(error);
@@ -273,8 +278,14 @@
             }
         });
 
+        // DIUBAH: Template Excel disesuaikan
         document.getElementById('downloadBtn').addEventListener('click', () => {
-            const templateData = [{ kodeRekening: "1.01.01.2.02.0001", nama: "Honorarium Narasumber", harga: 500000 }];
+            const templateData = [{ 
+                kodeRekening: "1.01.01.2.02.0001", 
+                nama: "Honorarium Narasumber", 
+                satuan: "OJ",
+                harga: 500000 
+            }];
             const ws = XLSX.utils.json_to_sheet(templateData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Template Komponen");
@@ -294,11 +305,13 @@
                     if (confirm(`Ditemukan ${jsonData.length} baris data komponen. Unggah semua?`)) {
                         const batch = writeBatch(db);
                         jsonData.forEach(item => {
-                            if (item.nama && item.harga && item.kodeRekening) {
+                            // DIUBAH: Validasi dan penyimpanan disesuaikan
+                            if (item.nama && item.harga && item.kodeRekening && item.satuan) {
                                 const docRef = doc(collection(db, "komponen"));
                                 batch.set(docRef, {
                                     kodeRekening: String(item.kodeRekening),
                                     nama: String(item.nama),
+                                    satuan: String(item.satuan),
                                     harga: Number(item.harga)
                                 });
                             }
@@ -307,7 +320,7 @@
                         alert(`${jsonData.length} data berhasil diunggah.`);
                     }
                 } catch (error) {
-                    alert("Gagal memproses file. Pastikan format kolom (kodeRekening, nama, harga) sesuai template.");
+                    alert("Gagal memproses file. Pastikan format kolom (kodeRekening, nama, satuan, harga) sesuai template.");
                 } finally {
                     document.getElementById('uploadFile').value = '';
                 }
