@@ -12,30 +12,17 @@
             --primary-color: #0d6efd;
             --success-color: #198754;
             --danger-color: #dc3545;
-            --warning-color: #ffc107;
             --background-color: #f4f7f6;
             --card-background: #ffffff;
             --text-color: #212529;
             --text-muted: #6c757d;
-            --border-color: #dee2e6;
+            --border-color: #e9ecef;
+            --row-hover-color: #f8f9fa;
         }
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            margin: 0;
-        }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--background-color); color: var(--text-color); margin: 0; }
 
-        .header {
-            background-color: var(--card-background);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
+        .header { background-color: var(--card-background); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .header .logo { font-weight: 700; font-size: 1.2em; color: var(--primary-color); }
         .header .user-info { display: flex; align-items: center; }
         .header .user-details { text-align: right; margin-right: 15px; }
@@ -44,40 +31,37 @@
         #logoutBtn { background-color: var(--danger-color); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 500; }
 
         .container { padding: 30px; }
-        
-        .card {
-            background-color: var(--card-background);
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            margin-bottom: 30px;
-        }
+        .card { background-color: var(--card-background); padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .card-header h2 { margin: 0; }
+        .header-actions .btn { margin-left: 10px; font-size: 0.9em; padding: 8px 15px; }
 
-        .card h2 { margin-top: 0; }
-        
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { margin-bottom: 8px; font-weight: 500; font-size: 0.9em; }
-        .form-group input { padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 1em; }
-        
         .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 1em; transition: background-color 0.2s; }
         .btn-primary { background-color: var(--primary-color); color: white; }
         .btn-success { background-color: var(--success-color); color: white; }
-        .btn-submit { margin-top: 20px; }
-        .btn:disabled { background-color: #6c757d; cursor: not-allowed; }
-        
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .header-actions .btn { margin-left: 10px; font-size: 0.9em; padding: 8px 15px; }
-        
+        .btn-danger { background-color: var(--danger-color); color: white; }
         #uploadLabel { cursor: pointer; }
         #uploadFile { display: none; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
         th { background-color: #f8f9fa; font-weight: 600; }
-        .action-buttons button { margin-right: 5px; padding: 5px 10px; font-size: 0.9em; }
-        .btn-warning { background-color: var(--warning-color); color: #333; }
-        .btn-danger { background-color: var(--danger-color); color: white; }
+
+        /* Gaya untuk baris bertingkat */
+        .parent-row { font-weight: 600; background-color: #f8f9fa; cursor: pointer; }
+        .parent-row:hover { background-color: #e9ecef; }
+        .parent-row .toggle-icon::before { content: '▶'; display: inline-block; margin-right: 10px; transition: transform 0.2s; font-size: 0.8em; }
+        .parent-row.expanded .toggle-icon::before { transform: rotate(90deg); }
+
+        .child-row { display: none; background-color: #fff; }
+        .child-row td:first-child { padding-left: 40px; }
+        .parent-row.expanded + .child-row,
+        .child-row.sibling-expanded { display: table-row; }
+        .total-pagu { text-align: right; }
+        .pagu-rekening { text-align: right; font-weight: normal; }
+
+        .action-buttons { text-align: right; }
+        .action-buttons button { padding: 5px 10px; font-size: 0.9em; }
     </style>
 </head>
 <body>
@@ -95,47 +79,20 @@
 
     <main class="container">
         <div class="card">
-            <h2>Tambah Pagu Anggaran Baru</h2>
-            <form id="paguForm">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="kodeRekening">Kode Rekening</label>
-                        <input type="text" id="kodeRekening" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="namaKegiatan">Nama Sub Kegiatan</label>
-                        <input type="text" id="namaKegiatan" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="paguAnggaran">Jumlah Pagu (Rp)</label>
-                        <input type="number" id="paguAnggaran" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="tahunAnggaran">Tahun</label>
-                        <input type="number" id="tahunAnggaran" placeholder="Contoh: 2025" required>
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary btn-submit">Simpan Pagu</button>
-            </form>
-        </div>
-
-        <div class="card">
             <div class="card-header">
                 <h2>Daftar Pagu Anggaran</h2>
                 <div class="header-actions">
                     <button id="downloadBtn" class="btn btn-primary">Download Template</button>
-                    <label for="uploadFile" id="uploadLabel" class="btn btn-success">Upload Template</label>
+                    <label for="uploadFile" id="uploadLabel" class="btn btn-success">Upload Data Excel</label>
                     <input type="file" id="uploadFile" accept=".xlsx, .xls">
                 </div>
             </div>
             <table>
                 <thead>
                     <tr>
-                        <th>Kode Rekening</th>
-                        <th>Nama Sub Kegiatan</th>
-                        <th>Pagu Anggaran</th>
-                        <th>Tahun</th>
-                        <th>Aksi</th>
+                        <th>Kode & Uraian Kegiatan</th>
+                        <th style="text-align: right;">Pagu Anggaran</th>
+                        <th style="text-align: right;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="paguTableBody">
@@ -146,7 +103,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, deleteDoc, writeBatch, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
@@ -160,15 +117,13 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- Security Guard & User Info ---
+        // --- Security & UI Setup ---
         const userRole = sessionStorage.getItem('userRole');
         const userName = sessionStorage.getItem('userName');
-        
         if (userRole !== 'admin') {
-            alert('Akses ditolak! Halaman ini khusus untuk Admin.');
+            alert('Akses ditolak!');
             window.location.href = 'index.html';
         }
-
         document.getElementById('userNameDisplay').textContent = userName;
         document.getElementById('userRoleDisplay').textContent = userRole;
         document.getElementById('logoutBtn').addEventListener('click', () => {
@@ -176,135 +131,148 @@
             window.location.href = 'login.html';
         });
 
-        const paguForm = document.getElementById('paguForm');
         const paguTableBody = document.getElementById('paguTableBody');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const uploadFile = document.getElementById('uploadFile');
-        const uploadLabel = document.getElementById('uploadLabel');
-        
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 
-        // --- Create (Menambah Pagu Baru) ---
-        paguForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const newPagu = {
-                kodeRekening: document.getElementById('kodeRekening').value,
-                namaKegiatan: document.getElementById('namaKegiatan').value,
-                paguAnggaran: Number(document.getElementById('paguAnggaran').value),
-                tahunAnggaran: Number(document.getElementById('tahunAnggaran').value),
-            };
+        // --- Read & Render Data ---
+        const paguCollection = collection(db, "anggaran");
+        onSnapshot(paguCollection, (snapshot) => {
+            const allData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            try {
-                await addDoc(collection(db, "sub_kegiatan"), newPagu);
-                alert('Pagu berhasil ditambahkan!');
-                paguForm.reset();
-            } catch (error) {
-                console.error("Error adding document: ", error);
-                alert('Gagal menambahkan pagu.');
+            // 1. Group data by Sub Kegiatan
+            const groupedData = allData.reduce((acc, item) => {
+                const key = item.kodeSubKegiatan;
+                if (!acc[key]) {
+                    acc[key] = {
+                        namaSubKegiatan: item.namaSubKegiatan,
+                        totalPagu: 0,
+                        rekening: []
+                    };
+                }
+                acc[key].totalPagu += item.paguAnggaran;
+                acc[key].rekening.push(item);
+                return acc;
+            }, {});
+
+            // 2. Render to Table
+            paguTableBody.innerHTML = '';
+            for (const kode in groupedData) {
+                const group = groupedData[kode];
+                
+                // Create Parent Row (Sub Kegiatan)
+                const parentRow = document.createElement('tr');
+                parentRow.className = 'parent-row';
+                parentRow.dataset.kode = kode;
+                parentRow.innerHTML = `
+                    <td><span class="toggle-icon"></span>${kode} - ${group.namaSubKegiatan}</td>
+                    <td class="total-pagu">${formatRupiah(group.totalPagu)}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-danger btn-sm" data-delete-group="${kode}">Hapus Sub</button>
+                    </td>
+                `;
+                paguTableBody.appendChild(parentRow);
+
+                // Create Child Rows (Rekening)
+                group.rekening.forEach(item => {
+                    const childRow = document.createElement('tr');
+                    childRow.className = 'child-row';
+                    childRow.dataset.parentKode = kode;
+                    childRow.innerHTML = `
+                        <td>${item.kodeRekening} - ${item.uraian}</td>
+                        <td class="pagu-rekening">${formatRupiah(item.paguAnggaran)}</td>
+                        <td class="action-buttons">
+                             <button class="btn btn-danger btn-sm" data-delete-item="${item.id}">Hapus</button>
+                        </td>
+                    `;
+                    paguTableBody.appendChild(childRow);
+                });
             }
         });
 
-        // --- Read (Membaca dan Menampilkan Pagu) ---
-        onSnapshot(collection(db, "sub_kegiatan"), (snapshot) => {
-            paguTableBody.innerHTML = '';
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${data.kodeRekening}</td>
-                    <td>${data.namaKegiatan}</td>
-                    <td>${formatRupiah(data.paguAnggaran)}</td>
-                    <td>${data.tahunAnggaran}</td>
-                    <td class="action-buttons">
-                        <button class="btn btn-danger" data-id="${doc.id}">Hapus</button>
-                    </td>
-                `;
-                paguTableBody.appendChild(row);
-            });
-        });
-
-        // --- Delete (Menghapus Pagu) ---
+        // --- Event Delegation for Toggling and Deleting ---
         paguTableBody.addEventListener('click', async (e) => {
-            if (e.target.classList.contains('btn-danger')) {
-                const docId = e.target.dataset.id;
-                if (confirm('Apakah Anda yakin ingin menghapus data pagu ini?')) {
-                    try {
-                        await deleteDoc(doc(db, "sub_kegiatan", docId));
-                        alert('Data berhasil dihapus.');
-                    } catch (error) {
-                        console.error("Error removing document: ", error);
-                        alert('Gagal menghapus data.');
-                    }
+            const target = e.target;
+
+            // Handle Toggle
+            if (target.closest('.parent-row')) {
+                const parentRow = target.closest('.parent-row');
+                parentRow.classList.toggle('expanded');
+                const kode = parentRow.dataset.kode;
+                const children = paguTableBody.querySelectorAll(`.child-row[data-parent-kode="${kode}"]`);
+                children.forEach(child => child.classList.toggle('sibling-expanded'));
+            }
+
+            // Handle Delete Item
+            if (target.dataset.deleteItem) {
+                const docId = target.dataset.deleteItem;
+                if (confirm('Yakin ingin menghapus item rekening ini?')) {
+                    await deleteDoc(doc(db, "anggaran", docId));
+                    alert('Item berhasil dihapus.');
+                }
+            }
+
+            // Handle Delete Group (Sub Kegiatan)
+            if (target.dataset.deleteGroup) {
+                const kodeSub = target.dataset.deleteGroup;
+                if (confirm(`PERINGATAN: Ini akan menghapus Sub Kegiatan "${kodeSub}" dan SEMUA rincian rekening di dalamnya. Lanjutkan?`)) {
+                    const q = query(paguCollection, where("kodeSubKegiatan", "==", kodeSub));
+                    const snapshot = await getDocs(q);
+                    const batch = writeBatch(db);
+                    snapshot.docs.forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+                    alert('Sub Kegiatan dan semua rinciannya berhasil dihapus.');
                 }
             }
         });
 
-        // ==========================================================
-        // BARU: Logika untuk Download Template Excel
-        // ==========================================================
-        downloadBtn.addEventListener('click', () => {
+        // --- Download & Upload Logic ---
+        document.getElementById('downloadBtn').addEventListener('click', () => {
             const templateData = [{
+                kodeSubKegiatan: "1.01.01.2.02",
+                namaSubKegiatan: "Pengembangan Karir Pendidik",
                 kodeRekening: "1.01.01.2.02.0001",
-                namaKegiatan: "Contoh Nama Kegiatan",
-                paguAnggaran: 50000000,
+                uraian: "Belanja ATK",
+                paguAnggaran: 5000000,
                 tahunAnggaran: 2025
             }];
-            const worksheet = XLSX.utils.json_to_sheet(templateData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Template Pagu");
-            XLSX.writeFile(workbook, "template_pagu.xlsx");
+            const ws = XLSX.utils.json_to_sheet(templateData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Template Pagu");
+            XLSX.writeFile(wb, "template_pagu_lengkap.xlsx");
         });
 
-        // ==========================================================
-        // BARU: Logika untuk Upload Template Excel
-        // ==========================================================
-        uploadFile.addEventListener('change', (e) => {
+        document.getElementById('uploadFile').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
-            uploadLabel.textContent = 'Memproses...';
-            uploadLabel.disabled = true;
-
             const reader = new FileReader();
             reader.onload = async (event) => {
                 try {
                     const data = event.target.result;
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
-                    if (jsonData.length === 0) {
-                        alert("File Excel kosong atau format tidak sesuai.");
-                        return;
-                    }
-
-                    if (confirm(`Ditemukan ${jsonData.length} baris data. Apakah Anda ingin mengunggah semua data ini?`)) {
-                        // Gunakan batch write untuk efisiensi
+                    if (confirm(`Ditemukan ${jsonData.length} baris data. Unggah semua?`)) {
                         const batch = writeBatch(db);
                         jsonData.forEach(item => {
-                            // Validasi dasar
-                            if (item.kodeRekening && item.namaKegiatan && item.paguAnggaran && item.tahunAnggaran) {
-                                const docRef = doc(collection(db, "sub_kegiatan"));
+                            if (item.kodeSubKegiatan && item.kodeRekening && item.paguAnggaran) {
+                                const docRef = doc(collection(db, "anggaran"));
                                 batch.set(docRef, {
+                                    kodeSubKegiatan: String(item.kodeSubKegiatan),
+                                    namaSubKegiatan: String(item.namaSubKegiatan || ''),
                                     kodeRekening: String(item.kodeRekening),
-                                    namaKegiatan: String(item.namaKegiatan),
+                                    uraian: String(item.uraian || ''),
                                     paguAnggaran: Number(item.paguAnggaran),
-                                    tahunAnggaran: Number(item.tahunAnggaran)
+                                    tahunAnggaran: Number(item.tahunAnggaran || new Date().getFullYear())
                                 });
                             }
                         });
-                        
                         await batch.commit();
-                        alert(`${jsonData.length} data pagu berhasil diunggah.`);
+                        alert(`${jsonData.length} data berhasil diunggah.`);
                     }
                 } catch (error) {
-                    console.error("Error processing file: ", error);
-                    alert("Gagal memproses file. Pastikan formatnya benar.");
+                    alert("Gagal memproses file. Pastikan format kolom sesuai template.");
                 } finally {
-                    uploadLabel.textContent = 'Upload Template';
-                    uploadLabel.disabled = false;
-                    uploadFile.value = ''; // Reset input file
+                    document.getElementById('uploadFile').value = '';
                 }
             };
             reader.readAsArrayBuffer(file);
