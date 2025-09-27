@@ -137,11 +137,9 @@
     </div>
 
     <script type="module">
-        // Impor fungsi yang diperlukan dari Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-        // Konfigurasi Firebase Anda
         const firebaseConfig = {
             apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
             authDomain: "kartu-kendali-kegiatan-ptk.firebaseapp.com",
@@ -151,17 +149,12 @@
             appId: "1:694993604999:web:83eaf3ddf0c5d0bc348322"
         };
 
-        // Inisialisasi Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- Logika Halaman ---
-
-        // Pengecekan Sesi Login Saat Halaman Dimuat
         (function checkActiveSession() {
             const activeUserRole = sessionStorage.getItem('userRole');
             if (activeUserRole) {
-                // Jika ada sesi aktif, langsung arahkan ke dashboard
                 window.location.href = 'dashboard.html';
             }
         })();
@@ -173,7 +166,7 @@
         const inputLabel = document.getElementById('inputLabel');
         const credentialInput = document.getElementById('credentialInput');
         
-        let selectedRole = 'admin'; // Role default
+        let selectedRole = 'admin';
 
         function updateFormUI(role) {
             [adminBtn, atasanBtn, pembuatBtn].forEach(btn => btn.classList.remove('active'));
@@ -218,7 +211,12 @@
                     alert('Login Admin Berhasil!');
                     sessionStorage.setItem('userRole', 'admin');
                     sessionStorage.setItem('userName', 'Administrator');
-                    window.location.href = 'dashboard.html';
+                    // ==========================================================
+                    // PERBAIKAN: Tambahkan jeda sebelum redirect
+                    // ==========================================================
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 50);
                 } else {
                     alert('Password Admin salah!');
                 }
@@ -237,7 +235,12 @@
                         sessionStorage.setItem('userRole', userData.role);
                         sessionStorage.setItem('userNip', userData.nip);
                         sessionStorage.setItem('userName', userData.nama);
-                        window.location.href = 'dashboard.html';
+                        // ==========================================================
+                        // PERBAIKAN: Tambahkan jeda sebelum redirect
+                        // ==========================================================
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 50);
                     }
                 } catch (error) {
                     console.error("Error saat login: ", error);
