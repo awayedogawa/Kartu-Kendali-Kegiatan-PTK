@@ -50,7 +50,8 @@
         .btn-submit { margin-top: 20px; }
 
         .komponen-container { margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 20px; }
-        .komponen-item { display: grid; grid-template-columns: 3fr 1fr 1fr 2fr auto; gap: 10px; align-items: center; margin-bottom: 10px; }
+        /* DIPERBARUI: Grid komponen sekarang ada 6 kolom */
+        .komponen-item { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr 2fr auto; gap: 10px; align-items: center; margin-bottom: 10px; }
         .komponen-item input, .komponen-item select { font-size: 0.9em; padding: 8px; }
         .komponen-item input[readonly] { background-color: #e9ecef; cursor: not-allowed; }
         .total-container { margin-top: 20px; text-align: right; font-size: 1.2em; font-weight: 600; }
@@ -59,21 +60,18 @@
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
         th { background-color: #f8f9fa; font-weight: 600; }
         td.amount { text-align: right; }
-
-        .status-group { display: flex; flex-wrap: wrap; gap: 10px; }
-        .status-group label { display: inline-flex; align-items: center; cursor: pointer; padding: 5px 10px; border-radius: 15px; border: 1px solid var(--border-color); transition: all 0.2s; }
-        .status-group input[type="radio"] { display: none; }
-        .status-group input[type="radio"]:checked + span { font-weight: 600; }
-        .status-group label:has(input[value="Proses Pembuatan TNT"]:checked) { background-color: var(--warning-color); color: #333; border-color: var(--warning-color); }
-        .status-group label:has(input[value="Pengajuan TNT"]:checked) { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
-        .status-group label:has(input[value="Terbayarkan"]:checked) { background-color: var(--success-color); color: white; border-color: var(--success-color); }
+        .action-buttons { text-align: right; white-space: nowrap; }
+        .btn-icon { background-color: transparent; border: none; cursor: pointer; padding: 6px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-left: 5px; }
+        .btn-icon:hover { background-color: #e9ecef; }
+        .btn-icon svg { width: 18px; height: 18px; }
+        .icon-edit { color: var(--primary-color); }
+        .icon-delete { color: var(--danger-color); }
 
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
         .modal-content { background-color: #fff; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; }
         .close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; }
-        .close-btn:hover { color: #333; }
-
-        @media (max-width: 768px) { .komponen-item { grid-template-columns: 1fr; gap: 8px; } }
+        
+        @media (max-width: 1200px) { .komponen-item { grid-template-columns: 1fr; gap: 8px; } }
     </style>
 </head>
 <body>
@@ -81,40 +79,35 @@
         <div class="logo">SI-KENDALI PTK</div>
         <div class="user-info">
             <a href="index.html" class="btn-header" style="background-color: var(--primary-color);">&#8592; Kembali</a>
-            <div class="user-details">
-                <span class="name" id="userNameDisplay"></span>
-                <span class="role" id="userRoleDisplay"></span>
-            </div>
+            <div class="user-details"><span class="name" id="userNameDisplay"></span><span class="role" id="userRoleDisplay"></span></div>
             <button id="logoutBtn" class="btn-header" style="background-color: var(--danger-color);">Logout</button>
         </div>
     </header>
 
     <main class="container">
         <div class="card">
-            <h2>Tambah Realisasi Kegiatan</h2>
+            <h2 id="formTitle">Tambah Realisasi Kegiatan</h2>
             <form id="kegiatanForm">
-                <div class="form-container">
+                <input type="hidden" id="editId"> <div class="form-container">
                     <div class="form-group"><label for="tanggal">Tanggal</label><input type="date" id="tanggal" required></div>
                     <div class="form-group"><label for="subKegiatan">Pilih Sub Kegiatan</label><select id="subKegiatan" required><option value="">Memuat...</option></select></div>
-                    <div class="form-group"><label for="kodeRekening">Pilih Kode Rekening</label><select id="kodeRekening" required><option value="">Pilih Sub Kegiatan Dulu</option></select></div>
-                    <div class="form-group"><label>Status</label><div id="formStatus" class="status-group"><label><input type="radio" name="status" value="Proses Pembuatan TNT" checked> <span>Proses</span></label><label><input type="radio" name="status" value="Pengajuan TNT"> <span>Pengajuan</span></label><label><input type="radio" name="status" value="Terbayarkan"> <span>Terbayar</span></label></div></div>
                 </div>
                 <div class="komponen-container">
                     <label style="font-weight: 500;">Rincian Komponen</label>
                     <div id="komponen-list">
-                        <div class="komponen-item"><select class="komponen-pilihan" required><option value="">Pilih Kode Rekening Dulu</option></select><input type="number" class="komponen-volume" placeholder="Volume" min="1" required><input type="text" class="komponen-satuan" placeholder="Satuan" readonly><input type="text" class="komponen-harga" placeholder="Harga (Rp)" readonly><button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); updateTotal()">X</button></div>
-                    </div>
+                        </div>
                     <button type="button" id="addKomponen" class="btn btn-primary" style="margin-top: 10px;">+ Tambah Komponen</button>
                     <div class="total-container"><span>Total: </span><span id="totalJumlah">Rp 0</span></div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-submit">Lanjut & Simpan</button>
+                <button type="button" id="cancelEditBtn" class="btn" style="display:none; background-color: #6c757d; color:white;">Batal Edit</button>
             </form>
         </div>
         <div class="card">
-            <h2>Riwayat Realisasi</h2>
+            <h2>Daftar Kegiatan</h2>
             <table>
-                <thead><tr><th>Tanggal</th><th>Nama Kegiatan</th><th>Status</th><th class="amount">Jumlah</th></tr></thead>
-                <tbody id="riwayatTableBody"></tbody>
+                <thead><tr><th>Tanggal</th><th>Sub Kegiatan</th><th>Nama Kegiatan</th><th class="amount">Jumlah</th><th class="action-buttons">Aksi</th></tr></thead>
+                <tbody id="kegiatanTableBody"></tbody>
             </table>
         </div>
     </main>
@@ -124,10 +117,7 @@
             <span class="close-btn">&times;</span>
             <h2>Masukkan Nama Kegiatan</h2>
             <form id="namaKegiatanForm">
-                <div class="form-group">
-                    <label for="namaKegiatanInput">Nama Kegiatan</label>
-                    <input type="text" id="namaKegiatanInput" placeholder="Contoh: Kegiatan Workshop Implementasi Kurikulum" required>
-                </div>
+                <div class="form-group"><label for="namaKegiatanInput">Nama Kegiatan</label><input type="text" id="namaKegiatanInput" required></div>
                 <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Simpan Kegiatan</button>
             </form>
         </div>
@@ -135,8 +125,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
+        // ... (Firebase config tetap sama) ...
         const firebaseConfig = {
             apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
             authDomain: "kartu-kendali-kegiatan-ptk.firebaseapp.com",
@@ -157,14 +148,16 @@
         document.getElementById('logoutBtn').addEventListener('click', () => { sessionStorage.clear(); window.location.href = 'login.html'; });
 
         const subKegiatanSelect = document.getElementById('subKegiatan');
-        const kodeRekeningSelect = document.getElementById('kodeRekening');
         const kegiatanForm = document.getElementById('kegiatanForm');
-        const riwayatTableBody = document.getElementById('riwayatTableBody');
+        const kegiatanTableBody = document.getElementById('kegiatanTableBody');
         const komponenList = document.getElementById('komponen-list');
         const addKomponenBtn = document.getElementById('addKomponen');
         const namaKegiatanModal = document.getElementById('namaKegiatanModal');
         const namaKegiatanForm = document.getElementById('namaKegiatanForm');
         const closeBtn = document.querySelector('.close-btn');
+        const editIdInput = document.getElementById('editId');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const formTitle = document.getElementById('formTitle');
 
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
         let dataAnggaran = [], dataKomponen = [], temporaryData = {};
@@ -183,41 +176,42 @@
         });
         onSnapshot(collection(db, "komponen"), (snapshot) => { dataKomponen = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
         
-        function updateKomponenDropdowns(filterKodeRekening = '') {
-            const dropdowns = document.querySelectorAll('.komponen-pilihan');
-            const filteredKomponen = dataKomponen.filter(item => item.kodeRekening === filterKodeRekening);
-            dropdowns.forEach(dropdown => {
-                const currentValue = dropdown.value;
-                dropdown.innerHTML = filteredKomponen.length === 0 ? '<option value="">Tidak ada komponen</option>' : '<option value="">Pilih Komponen</option>';
-                filteredKomponen.sort((a,b) => a.nama.localeCompare(b.nama)).forEach(item => {
+        function populateRekeningDropdown(selectElement, selectedValue = '') {
+            const selectedSubKegiatan = subKegiatanSelect.value;
+            selectElement.innerHTML = '<option value="">-- Pilih Kode Rekening --</option>';
+            if (selectedSubKegiatan) {
+                const rekeningTerkait = dataAnggaran.filter(item => item.kodeSubKegiatan === selectedSubKegiatan);
+                rekeningTerkait.sort((a,b) => a.kodeRekening.localeCompare(b.kodeRekening)).forEach(item => {
                     const option = document.createElement('option');
-                    option.value = item.nama; option.textContent = item.nama;
-                    option.dataset.harga = item.harga; option.dataset.satuan = item.satuan;
-                    dropdown.appendChild(option);
+                    option.value = item.kodeRekening;
+                    option.textContent = `${item.kodeRekening} - ${item.uraian}`;
+                    selectElement.appendChild(option);
                 });
-                dropdown.value = currentValue;
-            });
+            }
+            selectElement.value = selectedValue;
         }
         
-        // --- Event Listeners ---
+        function populateKomponenDropdown(selectElement, filterKodeRekening = '', selectedValue = '') {
+            const filteredKomponen = dataKomponen.filter(item => item.kodeRekening === filterKodeRekening);
+            selectElement.innerHTML = filteredKomponen.length === 0 ? '<option value="">Tidak ada komponen</option>' : '<option value="">Pilih Komponen</option>';
+            filteredKomponen.sort((a,b) => a.nama.localeCompare(b.nama)).forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.nama; option.textContent = item.nama;
+                option.dataset.harga = item.harga; option.dataset.satuan = item.satuan;
+                selectElement.appendChild(option);
+            });
+            selectElement.value = selectedValue;
+        }
+
+        // --- Event Listeners Dinamis ---
         document.addEventListener('change', (e) => {
             if (e.target.id === 'subKegiatan') {
-                const selectedKode = e.target.value;
-                kodeRekeningSelect.innerHTML = '<option value="">-- Pilih Kode Rekening --</option>';
-                if (selectedKode) {
-                    const rekeningTerkait = dataAnggaran.filter(item => item.kodeSubKegiatan === selectedKode);
-                    rekeningTerkait.sort((a,b) => a.kodeRekening.localeCompare(b.kodeRekening)).forEach(item => {
-                        const option = document.createElement('option');
-                        option.value = item.id; option.dataset.kode = item.kodeRekening;
-                        option.textContent = `${item.kodeRekening} - ${item.uraian} (${formatRupiah(item.paguAnggaran)})`;
-                        kodeRekeningSelect.appendChild(option);
-                    });
-                }
-                updateKomponenDropdowns();
+                document.querySelectorAll('.rekening-pilihan').forEach(el => populateRekeningDropdown(el));
             }
-            if(e.target.id === 'kodeRekening') {
-                const selectedOption = e.target.options[e.target.selectedIndex];
-                updateKomponenDropdowns(selectedOption.dataset.kode || '');
+            if (e.target.classList.contains('rekening-pilihan')) {
+                const itemRow = e.target.closest('.komponen-item');
+                const komponenSelect = itemRow.querySelector('.komponen-pilihan');
+                populateKomponenDropdown(komponenSelect, e.target.value);
             }
             if (e.target.classList.contains('komponen-pilihan')) {
                 const selectedOption = e.target.options[e.target.selectedIndex];
@@ -227,17 +221,28 @@
                 updateTotal();
             }
             if (e.target.classList.contains('komponen-volume')) { updateTotal(); }
-            if (e.target.name && e.target.name.startsWith('status_')) { updateStatus(e.target.name.split('_')[1], e.target.value); }
         });
-
-        addKomponenBtn.addEventListener('click', () => {
+        
+        function createKomponenItem(data = {}) {
             const newItem = document.createElement('div');
             newItem.className = 'komponen-item';
-            newItem.innerHTML = `<select class="komponen-pilihan" required><option value="">Pilih Kode Rekening Dulu</option></select><input type="number" class="komponen-volume" placeholder="Volume" min="1" required><input type="text" class="komponen-satuan" placeholder="Satuan" readonly><input type="text" class="komponen-harga" placeholder="Harga (Rp)" readonly><button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); updateTotal()">X</button>`;
+            newItem.innerHTML = `
+                <select class="rekening-pilihan" required><option value="">Pilih Rekening</option></select>
+                <select class="komponen-pilihan" required><option value="">Pilih Rekening Dulu</option></select>
+                <input type="number" class="komponen-volume" placeholder="Volume" min="1" required value="${data.volume || ''}">
+                <input type="text" class="komponen-satuan" placeholder="Satuan" readonly value="${data.satuan || ''}">
+                <input type="text" class="komponen-harga" placeholder="Harga (Rp)" readonly value="${data.harga ? formatRupiah(data.harga) : ''}">
+                <button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); updateTotal()">X</button>
+            `;
             komponenList.appendChild(newItem);
-            const currentKodeRekening = kodeRekeningSelect.options[kodeRekeningSelect.selectedIndex]?.dataset.kode;
-            if (currentKodeRekening) { updateKomponenDropdowns(currentKodeRekening); }
-        });
+            const rekeningSelect = newItem.querySelector('.rekening-pilihan');
+            const komponenSelect = newItem.querySelector('.komponen-pilihan');
+            populateRekeningDropdown(rekeningSelect, data.kodeRekening);
+            if(data.kodeRekening) populateKomponenDropdown(komponenSelect, data.kodeRekening, data.nama);
+        }
+
+        addKomponenBtn.addEventListener('click', () => createKomponenItem());
+        if(komponenList.children.length === 0) addKomponenBtn.click(); // Tambah 1 item di awal
 
         window.updateTotal = function() {
             let total = 0;
@@ -248,87 +253,126 @@
             document.getElementById('totalJumlah').textContent = formatRupiah(total);
         }
         
-        // --- Logika Simpan ---
-        kegiatanForm.addEventListener('submit', async (e) => {
+        // --- Logika Simpan (Create & Update) ---
+        kegiatanForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const docAnggaranId = kodeRekeningSelect.value;
-            const anggaranDipilih = dataAnggaran.find(item => item.id === docAnggaranId);
+            temporaryData = {}; // Reset
             let totalPengajuan = 0;
             const rincianKomponen = [];
-
             document.querySelectorAll('.komponen-item').forEach(item => {
                 const hargaString = item.querySelector('.komponen-harga').value.replace(/[^0-9]/g, '');
                 const harga = parseFloat(hargaString) || 0;
                 const volume = parseFloat(item.querySelector('.komponen-volume').value) || 0;
                 totalPengajuan += harga * volume;
                 rincianKomponen.push({
-                    nama: item.querySelector('.komponen-pilihan').value, volume, satuan: item.querySelector('.komponen-satuan').value, harga, subtotal: harga * volume
+                    kodeRekening: item.querySelector('.rekening-pilihan').value,
+                    nama: item.querySelector('.komponen-pilihan').value,
+                    volume, satuan: item.querySelector('.komponen-satuan').value, harga, subtotal: harga * volume
                 });
             });
 
-            // BARU: Logika Pengecekan Sisa Pagu
-            const paguRekening = anggaranDipilih.paguAnggaran;
-            const q = query(collection(db, "transaksi"), where("docAnggaranId", "==", docAnggaranId));
-            const transaksiSebelumnya = await getDocs(q);
-            let totalRealisasiSebelumnya = 0;
-            transaksiSebelumnya.forEach(doc => { totalRealisasiSebelumnya += doc.data().jumlah; });
-            const sisaPagu = paguRekening - totalRealisasiSebelumnya;
-
-            if (totalPengajuan > sisaPagu) {
-                alert(`Gagal! Pengajuan sebesar ${formatRupiah(totalPengajuan)} melebihi sisa pagu yang tersedia (${formatRupiah(sisaPagu)}).`);
-                return;
-            }
-
-            // Simpan data sementara dan buka modal
             temporaryData = {
                 tanggal: document.getElementById('tanggal').value,
-                status: document.querySelector('input[name="status"]:checked').value,
+                kodeSubKegiatan: subKegiatanSelect.value,
+                namaSubKegiatan: subKegiatanSelect.options[subKegiatanSelect.selectedIndex].text.split(' - ')[1],
                 jumlah: totalPengajuan,
                 rincian: rincianKomponen,
-                docAnggaranId, ...anggaranDipilih, diinputOleh: userName, timestamp: new Date()
+                status: 'Proses Pembuatan TNT', // Status awal saat create/update
+                diinputOleh: userName,
+                timestamp: new Date()
             };
+            
+            // Isi nama kegiatan jika mode edit
+            const currentNamaKegiatan = document.getElementById('namaKegiatanInput').value;
+            if(editIdInput.value && currentNamaKegiatan) {
+                 document.getElementById('namaKegiatanInput').value = currentNamaKegiatan;
+            }
+
             namaKegiatanModal.style.display = 'flex';
         });
 
-        // BARU: Simpan data final setelah mengisi nama kegiatan dari modal
         namaKegiatanForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             temporaryData.namaKegiatan = document.getElementById('namaKegiatanInput').value;
+            const docId = editIdInput.value;
             try {
-                await addDoc(collection(db, "transaksi"), temporaryData);
-                alert('Realisasi kegiatan berhasil disimpan!');
-                kegiatanForm.reset();
-                namaKegiatanForm.reset();
-                namaKegiatanModal.style.display = 'none';
-                kodeRekeningSelect.innerHTML = '<option value="">Pilih Sub Kegiatan Dulu</option>';
-                komponenList.innerHTML = `<div class="komponen-item">...</div>`; // Disederhanakan
-                updateTotal();
-            } catch (error) {
-                alert('Gagal menyimpan data.'); console.error(error);
+                if (docId) { // Mode Update
+                    await updateDoc(doc(db, "transaksi", docId), temporaryData);
+                    alert('Kegiatan berhasil diperbarui!');
+                } else { // Mode Create
+                    await addDoc(collection(db, "transaksi"), temporaryData);
+                    alert('Kegiatan baru berhasil disimpan!');
+                }
+                resetForm();
+            } catch (error) { alert('Gagal menyimpan data.'); console.error(error); }
+        });
+
+        function resetForm() {
+            kegiatanForm.reset();
+            namaKegiatanForm.reset();
+            editIdInput.value = '';
+            namaKegiatanModal.style.display = 'none';
+            komponenList.innerHTML = '';
+            addKomponenBtn.click();
+            formTitle.textContent = 'Tambah Realisasi Kegiatan';
+            cancelEditBtn.style.display = 'none';
+        }
+        cancelEditBtn.addEventListener('click', resetForm);
+
+        // --- Daftar Kegiatan (Read, Edit, Delete) ---
+        onSnapshot(query(collection(db, "transaksi"), orderBy("timestamp", "desc")), (snapshot) => {
+            kegiatanTableBody.innerHTML = '';
+            snapshot.forEach(doc => {
+                const data = doc.data(); const docId = doc.id; const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${data.tanggal}</td>
+                    <td>${data.namaSubKegiatan}</td>
+                    <td>${data.namaKegiatan}</td>
+                    <td class="amount">${formatRupiah(data.jumlah)}</td>
+                    <td class="action-buttons">
+                        <button class="btn-icon icon-edit" title="Edit Kegiatan" data-id="${docId}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                        <button class="btn-icon icon-delete" title="Hapus Kegiatan" data-id="${docId}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                    </td>
+                `;
+                kegiatanTableBody.appendChild(row);
+            });
+        });
+
+        kegiatanTableBody.addEventListener('click', async (e) => {
+            const button = e.target.closest('.btn-icon');
+            if(!button) return;
+            const docId = button.dataset.id;
+            
+            if (button.classList.contains('icon-delete')) {
+                if(confirm('Yakin ingin menghapus kegiatan ini?')) {
+                    await deleteDoc(doc(db, "transaksi", docId));
+                    alert('Kegiatan berhasil dihapus.');
+                }
+            }
+
+            if (button.classList.contains('icon-edit')) {
+                const docRef = doc(db, "transaksi", docId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    formTitle.textContent = 'Edit Realisasi Kegiatan';
+                    editIdInput.value = docId;
+                    document.getElementById('tanggal').value = data.tanggal;
+                    subKegiatanSelect.value = data.kodeSubKegiatan;
+                    document.getElementById('namaKegiatanInput').value = data.namaKegiatan;
+
+                    komponenList.innerHTML = '';
+                    data.rincian.forEach(item => createKomponenItem(item));
+                    
+                    updateTotal();
+                    cancelEditBtn.style.display = 'inline-block';
+                    window.scrollTo(0, 0);
+                }
             }
         });
 
-        // --- Tampilkan Riwayat ---
-        const qRiwayat = query(collection(db, "transaksi"), orderBy("timestamp", "desc"));
-        onSnapshot(qRiwayat, (snapshot) => {
-            riwayatTableBody.innerHTML = '';
-            snapshot.forEach(doc => {
-                const data = doc.data(); const docId = doc.id; const row = document.createElement('tr');
-                const statusHTML = `<div class="status-group"><label><input type="radio" name="status_${docId}" value="Proses Pembuatan TNT" ${data.status === 'Proses Pembuatan TNT' ? 'checked' : ''}> <span>Proses</span></label><label><input type="radio" name="status_${docId}" value="Pengajuan TNT" ${data.status === 'Pengajuan TNT' ? 'checked' : ''}> <span>Pengajuan</span></label><label><input type="radio" name="status_${docId}" value="Terbayarkan" ${data.status === 'Terbayarkan' ? 'checked' : ''}> <span>Terbayar</span></label></div>`;
-                row.innerHTML = `<td>${data.tanggal}</td><td>${data.namaKegiatan || data.namaSubKegiatan}</td><td>${statusHTML}</td><td class="amount">${formatRupiah(data.jumlah)}</td>`;
-                riwayatTableBody.appendChild(row);
-            });
-        });
-        
-        async function updateStatus(docId, newStatus) {
-            try { await updateDoc(doc(db, "transaksi", docId), { status: newStatus }); } 
-            catch (error) { alert("Gagal memperbarui status."); console.error(error); }
-        }
-
-        // Logika tutup modal
         closeBtn.onclick = () => namaKegiatanModal.style.display = 'none';
         window.onclick = (event) => { if (event.target == namaKegiatanModal) { namaKegiatanModal.style.display = 'none'; } };
-
     </script>
 </body>
 </html>
