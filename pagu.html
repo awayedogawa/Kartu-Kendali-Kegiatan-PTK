@@ -47,7 +47,6 @@
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
         th { background-color: #f8f9fa; font-weight: 600; }
 
-        /* Gaya untuk baris bertingkat */
         .parent-row { font-weight: 600; background-color: #f8f9fa; cursor: pointer; }
         .parent-row:hover { background-color: #e9ecef; }
         .parent-row .toggle-icon::before { content: '▶'; display: inline-block; margin-right: 10px; transition: transform 0.2s; font-size: 0.8em; }
@@ -138,8 +137,6 @@
         const paguCollection = collection(db, "anggaran");
         onSnapshot(paguCollection, (snapshot) => {
             const allData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-            // 1. Group data by Sub Kegiatan
             const groupedData = allData.reduce((acc, item) => {
                 const key = item.kodeSubKegiatan;
                 if (!acc[key]) {
@@ -154,12 +151,9 @@
                 return acc;
             }, {});
 
-            // 2. Render to Table
             paguTableBody.innerHTML = '';
             for (const kode in groupedData) {
                 const group = groupedData[kode];
-                
-                // Create Parent Row (Sub Kegiatan)
                 const parentRow = document.createElement('tr');
                 parentRow.className = 'parent-row';
                 parentRow.dataset.kode = kode;
@@ -172,7 +166,6 @@
                 `;
                 paguTableBody.appendChild(parentRow);
 
-                // Create Child Rows (Rekening)
                 group.rekening.forEach(item => {
                     const childRow = document.createElement('tr');
                     childRow.className = 'child-row';
@@ -193,7 +186,6 @@
         paguTableBody.addEventListener('click', async (e) => {
             const target = e.target;
 
-            // Handle Toggle
             if (target.closest('.parent-row')) {
                 const parentRow = target.closest('.parent-row');
                 parentRow.classList.toggle('expanded');
@@ -202,7 +194,6 @@
                 children.forEach(child => child.classList.toggle('sibling-expanded'));
             }
 
-            // Handle Delete Item
             if (target.dataset.deleteItem) {
                 const docId = target.dataset.deleteItem;
                 if (confirm('Yakin ingin menghapus item rekening ini?')) {
@@ -211,7 +202,6 @@
                 }
             }
 
-            // Handle Delete Group (Sub Kegiatan)
             if (target.dataset.deleteGroup) {
                 const kodeSub = target.dataset.deleteGroup;
                 if (confirm(`PERINGATAN: Ini akan menghapus Sub Kegiatan "${kodeSub}" dan SEMUA rincian rekening di dalamnya. Lanjutkan?`)) {
@@ -248,7 +238,10 @@
             reader.onload = async (event) => {
                 try {
                     const data = event.target.result;
-                    const workbook = XLSX.read(data, { type: 'array' });
+                    // ==========================================================
+                    // PERBAIKAN: Mengganti tipe 'array' menjadi 'buffer'
+                    // ==========================================================
+                    const workbook = XLSX.read(data, { type: 'buffer' });
                     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
                     if (confirm(`Ditemukan ${jsonData.length} baris data. Unggah semua?`)) {
@@ -270,6 +263,7 @@
                         alert(`${jsonData.length} data berhasil diunggah.`);
                     }
                 } catch (error) {
+                    console.error(error); // Tampilkan error di console untuk debug
                     alert("Gagal memproses file. Pastikan format kolom sesuai template.");
                 } finally {
                     document.getElementById('uploadFile').value = '';
