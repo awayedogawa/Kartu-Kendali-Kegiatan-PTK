@@ -32,7 +32,7 @@
         .btn-header { background-color: var(--info-color); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 500; text-decoration: none; font-size: 1em; }
 
         .container { padding: 30px; }
-        .card { background-color: var(--card-background); padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 30px;}
+        .card { background-color: var(--card-background); padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .card-header h2 { margin: 0; }
         .header-actions .btn { margin-left: 10px; font-size: 0.9em; padding: 8px 15px; }
@@ -40,11 +40,44 @@
         .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 1em; }
         .btn-primary { background-color: var(--primary-color); color: white; }
         .btn-success { background-color: var(--success-color); color: white; }
-        .btn-danger { background-color: var(--danger-color); color: white; }
         #uploadLabel { cursor: pointer; }
         #uploadFile { display: none; }
         
-        .form-grid { display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 20px; align-items: flex-end; }
+        /* BARU: Style untuk Modal/Pop-up */
+        .modal {
+            display: none; /* Sembunyi by default */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+        }
+        .close-btn:hover { color: #333; }
+
+        .form-grid { display: flex; flex-direction: column; gap: 15px; }
         .form-group { display: flex; flex-direction: column; }
         .form-group label { margin-bottom: 8px; font-weight: 500; font-size: 0.9em; }
         .form-group input, .form-group select { padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 1em; }
@@ -78,32 +111,10 @@
 
     <main class="container">
         <div class="card">
-            <h2>Input Komponen Manual</h2>
-            <form id="komponenForm">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="kodeRekening">Pilih Kode Rekening</label>
-                        <select id="kodeRekening" required>
-                            <option value="">Memuat...</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="namaKomponen">Nama Komponen</label>
-                        <input type="text" id="namaKomponen" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="hargaKomponen">Harga Satuan (Rp)</label>
-                        <input type="number" id="hargaKomponen" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                </div>
-            </form>
-        </div>
-
-        <div class="card">
             <div class="card-header">
                 <h2>Daftar Komponen & Harga</h2>
                 <div class="header-actions">
+                    <button id="addKomponenBtn" class="btn btn-primary">Tambah Komponen</button>
                     <button id="downloadBtn" class="btn btn-primary">Download Template</button>
                     <label for="uploadFile" id="uploadLabel" class="btn btn-success">Upload Komponen</label>
                     <input type="file" id="uploadFile" accept=".xlsx, .xls">
@@ -124,6 +135,33 @@
         </div>
     </main>
 
+    <div id="komponenModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Tambah Komponen Baru</h2>
+            <form id="komponenForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="kodeRekening">Pilih Kode Rekening</label>
+                        <select id="kodeRekening" required>
+                            <option value="">Memuat...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="namaKomponen">Nama Komponen</label>
+                        <input type="text" id="namaKomponen" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="hargaKomponen">Harga Satuan (Rp)</label>
+                        <input type="number" id="hargaKomponen" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, deleteDoc, writeBatch, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
@@ -140,7 +178,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- Security & UI Setup ---
         const userRole = sessionStorage.getItem('userRole');
         const userName = sessionStorage.getItem('userName');
         if (userRole !== 'admin') {
@@ -157,9 +194,21 @@
         const komponenForm = document.getElementById('komponenForm');
         const kodeRekeningSelect = document.getElementById('kodeRekening');
         const komponenTableBody = document.getElementById('komponenTableBody');
+        const komponenModal = document.getElementById('komponenModal');
+        const addKomponenBtn = document.getElementById('addKomponenBtn');
+        const closeBtn = document.querySelector('.close-btn');
+
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 
-        // --- BARU: Muat Pilihan Kode Rekening ---
+        // BARU: Logika untuk buka/tutup Pop-up
+        addKomponenBtn.onclick = () => komponenModal.style.display = 'flex';
+        closeBtn.onclick = () => komponenModal.style.display = 'none';
+        window.onclick = (event) => {
+            if (event.target == komponenModal) {
+                komponenModal.style.display = 'none';
+            }
+        }
+
         onSnapshot(collection(db, "anggaran"), (snapshot) => {
             const rekeningData = snapshot.docs.map(doc => doc.data());
             const rekeningUnik = [...new Map(rekeningData.map(item => [item['kodeRekening'], item])).values()];
@@ -173,8 +222,6 @@
             });
         });
 
-
-        // --- Read & Render Data ---
         const komponenCollection = collection(db, "komponen");
         onSnapshot(komponenCollection, (snapshot) => {
             const allData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -197,7 +244,6 @@
             });
         });
         
-        // --- BARU: Create (Input Manual) ---
         komponenForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const newKomponen = {
@@ -209,13 +255,13 @@
                 await addDoc(komponenCollection, newKomponen);
                 alert('Komponen baru berhasil disimpan.');
                 komponenForm.reset();
+                komponenModal.style.display = 'none'; // Tutup pop-up setelah berhasil
             } catch (error) {
                 alert('Gagal menyimpan komponen.');
                 console.error(error);
             }
         });
 
-        // --- Delete ---
         komponenTableBody.addEventListener('click', async (e) => {
             const button = e.target.closest('.btn-icon');
             if(button && button.dataset.id) {
@@ -227,7 +273,6 @@
             }
         });
 
-        // --- Download & Upload Logic (DIPERBARUI) ---
         document.getElementById('downloadBtn').addEventListener('click', () => {
             const templateData = [{ kodeRekening: "1.01.01.2.02.0001", nama: "Honorarium Narasumber", harga: 500000 }];
             const ws = XLSX.utils.json_to_sheet(templateData);
