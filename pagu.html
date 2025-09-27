@@ -13,6 +13,7 @@
             --success-color: #198754;
             --danger-color: #dc3545;
             --warning-color: #ffc107;
+            --info-color: #6c757d;
             --background-color: #f4f7f6;
             --card-background: #ffffff;
             --text-color: #212529;
@@ -25,11 +26,22 @@
 
         .header { background-color: var(--card-background); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .header .logo { font-weight: 700; font-size: 1.2em; color: var(--primary-color); }
-        .header .user-info { display: flex; align-items: center; }
-        .header .user-details { text-align: right; margin-right: 15px; }
+        .header .user-info { display: flex; align-items: center; gap: 15px; }
+        .header .user-details { text-align: right; }
         .header .user-details .name { font-weight: 600; display: block; }
         .header .user-details .role { font-size: 0.8em; color: var(--text-muted); text-transform: capitalize; }
-        #logoutBtn { background-color: var(--danger-color); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 500; }
+        
+        .btn-header {
+            background-color: var(--info-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            font-size: 1em;
+        }
 
         .container { padding: 30px; }
         .card { background-color: var(--card-background); padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
@@ -84,11 +96,12 @@
     <header class="header">
         <div class="logo">SI-KENDALI PTK</div>
         <div class="user-info">
+             <a href="index.html" class="btn-header" style="background-color: var(--primary-color);">&#8592; Kembali</a>
             <div class="user-details">
                 <span class="name" id="userNameDisplay">Nama Pengguna</span>
                 <span class="role" id="userRoleDisplay">Peran</span>
             </div>
-            <button id="logoutBtn">Logout</button>
+            <button id="logoutBtn" class="btn-header" style="background-color: var(--danger-color);">Logout</button>
         </div>
     </header>
 
@@ -152,18 +165,11 @@
         onSnapshot(paguCollection, (snapshot) => {
             let allData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            // ==========================================================
-            // BARU: Logika untuk mengurutkan data
-            // ==========================================================
             allData.sort((a, b) => {
-                // Urutkan berdasarkan Kode Sub Kegiatan
                 if (a.kodeSubKegiatan < b.kodeSubKegiatan) return -1;
                 if (a.kodeSubKegiatan > b.kodeSubKegiatan) return 1;
-                
-                // Jika Kode Sub Kegiatan sama, urutkan berdasarkan Kode Rekening
                 if (a.kodeRekening < b.kodeRekening) return -1;
                 if (a.kodeRekening > b.kodeRekening) return 1;
-
                 return 0;
             });
 
@@ -182,7 +188,6 @@
             }, {});
 
             paguTableBody.innerHTML = '';
-            // Menggunakan Object.keys(groupedData).sort() agar grupnya juga terurut
             Object.keys(groupedData).sort().forEach(kode => {
                 const group = groupedData[kode];
                 const parentRow = document.createElement('tr');
