@@ -13,7 +13,17 @@
 </head>
 <body>
 
-    <header class="header"></header>
+    <header class="header">
+        <div class="logo">SI-KENDALI PTK</div>
+        <div class="user-info">
+            <a href="index.html" class="btn-header" style="background-color: var(--primary-color);">&#8592; Kembali</a>
+            <div class="user-details">
+                <span class="name" id="userNameDisplay">Nama Pengguna</span>
+                <span class="role" id="userRoleDisplay">Peran</span>
+            </div>
+            <button id="logoutBtn" class="btn-header" style="background-color: var(--danger-color);">Logout</button>
+        </div>
+    </header>
 
     <main class="container">
         <div class="card">
@@ -148,7 +158,6 @@
             komponenTableBody.innerHTML = '';
             allData.forEach(item => {
                 const row = document.createElement('tr');
-                // DIUBAH: Menambahkan tombol ikon edit
                 row.innerHTML = `
                     <td>${item.kodeRekening || ''}</td>
                     <td>${item.nama}</td>
@@ -167,7 +176,6 @@
             });
         });
         
-        // DIUBAH: Form submit sekarang bisa create dan update
         komponenForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = editIdInput.value;
@@ -178,10 +186,10 @@
                 harga: Number(document.getElementById('hargaKomponen').value)
             };
             try {
-                if (id) { // Mode Update
+                if (id) {
                     await updateDoc(doc(db, "komponen", id), data);
                     alert('Komponen berhasil diperbarui.');
-                } else { // Mode Create
+                } else {
                     await addDoc(komponenCollection, data);
                     alert('Komponen baru berhasil disimpan.');
                 }
@@ -193,21 +201,16 @@
             }
         });
 
-        // DIUBAH: Event listener di tabel bisa menangani edit dan hapus
         komponenTableBody.addEventListener('click', async (e) => {
             const button = e.target.closest('.btn-icon');
             if(button && button.dataset.id) {
                 const docId = button.dataset.id;
-                
-                // Logika Hapus
                 if (button.classList.contains('icon-delete')) {
                     if(confirm('Yakin ingin menghapus komponen ini?')){
                         await deleteDoc(doc(db, "komponen", docId));
                         alert('Komponen berhasil dihapus.');
                     }
                 }
-                
-                // Logika Edit
                 if (button.classList.contains('icon-edit')) {
                     const docRef = doc(db, "komponen", docId);
                     const docSnap = await getDoc(docRef);
