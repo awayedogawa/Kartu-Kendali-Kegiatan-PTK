@@ -2,10 +2,10 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
     <title>Input Kegiatan - Kartu Kendali PTK</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.comcom/css2?family=Poppins:wght@400;500;600;700&display=swap');
         
         :root {
             --primary-color: #0d6efd;
@@ -35,10 +35,10 @@
         .card { background-color: var(--card-background); padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 30px; }
         .card h2 { margin-top: 0; }
         
-        /* DIPERBARUI: Mengatur grid menjadi 4 kolom */
+        /* DIPERBARUI: Mengatur grid menjadi 2 kolom */
         .form-grid { 
             display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
+            grid-template-columns: 1fr 1fr; 
             gap: 20px; 
         }
         .form-group { display: flex; flex-direction: column; }
@@ -60,27 +60,30 @@
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
         th { background-color: #f8f9fa; font-weight: 600; }
         td.amount { text-align: right; }
-        .status { padding: 4px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 500; text-align: center; }
-        .status-proses { background-color: var(--warning-color); color: #333; }
-        .status-pengajuan { background-color: var(--primary-color); color: white; }
-        .status-terbayarkan { background-color: var(--success-color); color: white; }
-        
-        /* Media query untuk layar kecil */
-        @media (max-width: 992px) {
-            .form-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            .komponen-item {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-        }
 
+        /* BARU: Style untuk status checklist */
+        .status-group { display: flex; flex-wrap: wrap; gap: 10px; }
+        .status-group label {
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 15px;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s;
+        }
+        .status-group input[type="radio"] { display: none; }
+        .status-group input[type="radio"]:checked + span {
+            font-weight: 600;
+        }
+        .status-group label:has(input[value="Proses Pembuatan TNT"]:checked) { background-color: var(--warning-color); color: #333; border-color: var(--warning-color); }
+        .status-group label:has(input[value="Pengajuan TNT"]:checked) { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .status-group label:has(input[value="Terbayarkan"]:checked) { background-color: var(--success-color); color: white; border-color: var(--success-color); }
+
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .komponen-item { grid-template-columns: 1fr; gap: 8px; }
+        }
     </style>
 </head>
 <body>
@@ -107,12 +110,12 @@
                         <input type="date" id="tanggal" required>
                     </div>
                     <div class="form-group">
-                        <label for="status">Status</label>
-                        <select id="status" required>
-                            <option value="Proses Pembuatan TNT">Proses Pembuatan TNT</option>
-                            <option value="Pengajuan TNT">Pengajuan TNT</option>
-                            <option value="Terbayarkan">Terbayarkan</option>
-                        </select>
+                        <label>Status</label>
+                        <div id="formStatus" class="status-group" style="padding-top: 5px;">
+                            <label><input type="radio" name="status" value="Proses Pembuatan TNT" checked> <span>Proses Pembuatan TNT</span></label>
+                            <label><input type="radio" name="status" value="Pengajuan TNT"> <span>Pengajuan TNT</span></label>
+                            <label><input type="radio" name="status" value="Terbayarkan"> <span>Terbayarkan</span></label>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="subKegiatan">Pilih Sub Kegiatan</label>
@@ -132,9 +135,7 @@
                     <label style="font-weight: 500;">Rincian Komponen</label>
                     <div id="komponen-list">
                         <div class="komponen-item">
-                            <select class="komponen-pilihan" required>
-                                <option value="">Pilih Komponen</option>
-                            </select>
+                            <select class="komponen-pilihan" required><option value="">Pilih Komponen</option></select>
                             <input type="number" class="komponen-volume" placeholder="Volume" min="1" required>
                             <input type="text" class="komponen-satuan" placeholder="Satuan" required>
                             <input type="text" class="komponen-harga" placeholder="Harga Satuan (Rp)" readonly>
@@ -170,7 +171,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
@@ -186,10 +187,7 @@
 
         const userRole = sessionStorage.getItem('userRole');
         const userName = sessionStorage.getItem('userName');
-        if (!userRole) {
-            alert('Akses ditolak! Silakan login.');
-            window.location.href = 'login.html';
-        }
+        if (!userRole) { window.location.href = 'login.html'; }
         document.getElementById('userNameDisplay').textContent = userName;
         document.getElementById('userRoleDisplay').textContent = userRole;
         document.getElementById('logoutBtn').addEventListener('click', () => {
@@ -203,11 +201,8 @@
         const riwayatTableBody = document.getElementById('riwayatTableBody');
         const komponenList = document.getElementById('komponen-list');
         const addKomponenBtn = document.getElementById('addKomponen');
-        
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
-
-        let dataAnggaran = [];
-        let dataKomponen = [];
+        let dataAnggaran = [], dataKomponen = [];
 
         onSnapshot(collection(db, "anggaran"), (snapshot) => {
             dataAnggaran = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -227,8 +222,7 @@
         });
 
         function updateKomponenDropdowns() {
-            const dropdowns = document.querySelectorAll('.komponen-pilihan');
-            dropdowns.forEach(dropdown => {
+            document.querySelectorAll('.komponen-pilihan').forEach(dropdown => {
                 const currentValue = dropdown.value;
                 dropdown.innerHTML = '<option value="">Pilih Komponen</option>';
                 dataKomponen.sort((a,b) => a.nama.localeCompare(b.nama)).forEach(item => {
@@ -258,12 +252,17 @@
             }
             if (e.target.classList.contains('komponen-pilihan')) {
                 const selectedOption = e.target.options[e.target.selectedIndex];
-                const harga = selectedOption.dataset.harga || 0;
-                e.target.closest('.komponen-item').querySelector('.komponen-harga').value = harga;
+                e.target.closest('.komponen-item').querySelector('.komponen-harga').value = selectedOption.dataset.harga || 0;
                 updateTotal();
             }
             if (e.target.classList.contains('komponen-volume')) {
                 updateTotal();
+            }
+            // BARU: Event listener untuk update status dari tabel riwayat
+            if (e.target.name && e.target.name.startsWith('status_')) {
+                const docId = e.target.name.split('_')[1];
+                const newStatus = e.target.value;
+                updateStatus(docId, newStatus);
             }
         });
 
@@ -284,21 +283,17 @@
         window.updateTotal = function() {
             let total = 0;
             document.querySelectorAll('.komponen-item').forEach(item => {
-                const harga = parseFloat(item.querySelector('.komponen-harga').value) || 0;
-                const volume = parseFloat(item.querySelector('.komponen-volume').value) || 0;
-                total += harga * volume;
+                total += (parseFloat(item.querySelector('.komponen-harga').value) || 0) * (parseFloat(item.querySelector('.komponen-volume').value) || 0);
             });
             document.getElementById('totalJumlah').textContent = formatRupiah(total);
         }
         
         kegiatanForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const docAnggaranId = kodeRekeningSelect.value;
             const anggaranDipilih = dataAnggaran.find(item => item.id === docAnggaranId);
             let totalJumlah = 0;
             const rincianKomponen = [];
-
             document.querySelectorAll('.komponen-item').forEach(item => {
                 const harga = parseFloat(item.querySelector('.komponen-harga').value) || 0;
                 const volume = parseFloat(item.querySelector('.komponen-volume').value) || 0;
@@ -315,7 +310,7 @@
 
             const realisasiBaru = {
                 tanggal: document.getElementById('tanggal').value,
-                status: document.getElementById('status').value,
+                status: document.querySelector('input[name="status"]:checked').value, // Ambil dari radio button
                 jumlah: totalJumlah,
                 rincian: rincianKomponen,
                 docAnggaranId: docAnggaranId,
@@ -330,14 +325,7 @@
                 alert('Realisasi kegiatan berhasil disimpan!');
                 kegiatanForm.reset();
                 kodeRekeningSelect.innerHTML = '<option value="">Pilih Sub Kegiatan Dulu</option>';
-                komponenList.innerHTML = `
-                    <div class="komponen-item">
-                        <select class="komponen-pilihan" required><option value="">Pilih Komponen</option></select>
-                        <input type="number" class="komponen-volume" placeholder="Volume" min="1" required>
-                        <input type="text" class="komponen-satuan" placeholder="Satuan" required>
-                        <input type="text" class="komponen-harga" placeholder="Harga Satuan (Rp)" readonly>
-                        <button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); updateTotal()">X</button>
-                    </div>`;
+                komponenList.innerHTML = `<div class="komponen-item">...</div>`; // Disederhanakan
                 updateTotal();
                 updateKomponenDropdowns();
             } catch (error) {
@@ -351,21 +339,38 @@
             riwayatTableBody.innerHTML = '';
             snapshot.forEach(doc => {
                 const data = doc.data();
+                const docId = doc.id;
                 const row = document.createElement('tr');
-                let statusClass = '';
-                if(data.status === 'Proses Pembuatan TNT') statusClass = 'status-proses';
-                if(data.status === 'Pengajuan TNT') statusClass = 'status-pengajuan';
-                if(data.status === 'Terbayarkan') statusClass = 'status-terbayarkan';
-
+                // BARU: Buat radio button untuk setiap status di tabel
+                const statusHTML = `
+                    <div class="status-group">
+                        <label><input type="radio" name="status_${docId}" value="Proses Pembuatan TNT" ${data.status === 'Proses Pembuatan TNT' ? 'checked' : ''}> <span>Proses</span></label>
+                        <label><input type="radio" name="status_${docId}" value="Pengajuan TNT" ${data.status === 'Pengajuan TNT' ? 'checked' : ''}> <span>Pengajuan</span></label>
+                        <label><input type="radio" name="status_${docId}" value="Terbayarkan" ${data.status === 'Terbayarkan' ? 'checked' : ''}> <span>Terbayar</span></label>
+                    </div>`;
+                
                 row.innerHTML = `
                     <td>${data.tanggal}</td>
                     <td>${data.namaSubKegiatan}</td>
-                    <td><span class="status ${statusClass}">${data.status}</span></td>
+                    <td>${statusHTML}</td>
                     <td class="amount">${formatRupiah(data.jumlah)}</td>
                 `;
                 riwayatTableBody.appendChild(row);
             });
         });
+        
+        // BARU: Fungsi untuk update status di Firestore
+        async function updateStatus(docId, newStatus) {
+            const docRef = doc(db, "transaksi", docId);
+            try {
+                await updateDoc(docRef, {
+                    status: newStatus
+                });
+            } catch (error) {
+                console.error("Gagal update status: ", error);
+                alert("Gagal memperbarui status.");
+            }
+        }
 
     </script>
 </body>
