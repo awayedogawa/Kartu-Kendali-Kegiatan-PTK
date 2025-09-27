@@ -56,6 +56,7 @@
         .komponen-container { margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 20px; }
         .komponen-item { display: grid; grid-template-columns: 3fr 1fr 1fr 2fr auto; gap: 10px; align-items: center; margin-bottom: 10px; }
         .komponen-item input, .komponen-item select { font-size: 0.9em; padding: 8px; }
+        .komponen-item input[readonly] { background-color: #e9ecef; cursor: not-allowed; }
         .total-container { margin-top: 20px; text-align: right; font-size: 1.2em; font-weight: 600; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -135,8 +136,8 @@
                         <div class="komponen-item">
                             <select class="komponen-pilihan" required><option value="">Pilih Kode Rekening Dulu</option></select>
                             <input type="number" class="komponen-volume" placeholder="Volume" min="1" required>
-                            <input type="text" class="komponen-satuan" placeholder="Satuan" required>
-                            <input type="text" class="komponen-harga" placeholder="Harga Satuan (Rp)" readonly>
+                            <input type="text" class="komponen-satuan" placeholder="Satuan" readonly>
+                            <input type="text" class="komponen-harga" placeholder="Harga (Rp)" readonly>
                             <button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); updateTotal()">X</button>
                         </div>
                     </div>
@@ -216,10 +217,8 @@
         
         onSnapshot(collection(db, "komponen"), (snapshot) => {
             dataKomponen = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            // Jangan panggil updateKomponenDropdowns di sini, agar tidak menampilkan semua komponen di awal
         });
         
-        // DIPERBARUI: Fungsi ini sekarang menerima kode rekening sebagai filter
         function updateKomponenDropdowns(filterKodeRekening = '') {
             const dropdowns = document.querySelectorAll('.komponen-pilihan');
             const filteredKomponen = dataKomponen.filter(item => item.kodeRekening === filterKodeRekening);
@@ -235,6 +234,7 @@
                         option.value = item.nama;
                         option.textContent = item.nama;
                         option.dataset.harga = item.harga;
+                        option.dataset.satuan = item.satuan;
                         dropdown.appendChild(option);
                     });
                 }
@@ -251,16 +251,14 @@
                     rekeningTerkait.sort((a,b) => a.kodeRekening.localeCompare(b.kodeRekening)).forEach(item => {
                         const option = document.createElement('option');
                         option.value = item.id;
-                        option.dataset.kode = item.kodeRekening; // Simpan kode rekening di data-attribute
+                        option.dataset.kode = item.kodeRekening;
                         option.textContent = `${item.kodeRekening} - ${item.uraian} (${formatRupiah(item.paguAnggaran)})`;
                         kodeRekeningSelect.appendChild(option);
                     });
                 }
-                 // Reset komponen dropdown
                 updateKomponenDropdowns();
             }
 
-            // BARU: Panggil filter komponen saat kode rekening diganti
             if(e.target.id === 'kodeRekening') {
                 const selectedOption = e.target.options[e.target.selectedIndex];
                 const filter = selectedOption.dataset.kode || '';
@@ -269,7 +267,9 @@
 
             if (e.target.classList.contains('komponen-pilihan')) {
                 const selectedOption = e.target.options[e.target.selectedIndex];
-                e.target.closest('.komponen-item').querySelector('.komponen-harga').value = selectedOption.dataset.harga || 0;
+                const itemRow = e.target.closest('.komponen-item');
+                itemRow.querySelector('.komponen-harga').value = formatRupiah(selectedOption.dataset.harga || 0); // Format ke Rupiah
+                itemRow.querySelector('.komponen-satuan').value = selectedOption.dataset.satuan || '';
                 updateTotal();
             }
             if (e.target.classList.contains('komponen-volume')) {
@@ -285,15 +285,15 @@
         addKomponenBtn.addEventListener('click', () => {
             const newItem = document.createElement('div');
             newItem.className = 'komponen-item';
+            // DIPERBARUI: Kolom satuan dan harga dikunci (readonly)
             newItem.innerHTML = `
                 <select class="komponen-pilihan" required><option value="">Pilih Kode Rekening Dulu</option></select>
                 <input type="number" class="komponen-volume" placeholder="Volume" min="1" required>
-                <input type="text" class="komponen-satuan" placeholder="Satuan" required>
-                <input type="text" class="komponen-harga" placeholder="Harga Satuan (Rp)" readonly>
+                <input type="text" class="komponen-satuan" placeholder="Satuan" readonly>
+                <input type="text" class="komponen-harga" placeholder="Harga (Rp)" readonly>
                 <button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); updateTotal()">X</button>
             `;
             komponenList.appendChild(newItem);
-            // Panggil lagi untuk mengisi dropdown baru dengan komponen yang terfilter
             const currentKodeRekening = kodeRekeningSelect.options[kodeRekeningSelect.selectedIndex]?.dataset.kode;
             if(currentKodeRekening) {
                 updateKomponenDropdowns(currentKodeRekening);
@@ -303,7 +303,11 @@
         window.updateTotal = function() {
             let total = 0;
             document.querySelectorAll('.komponen-item').forEach(item => {
-                total += (parseFloat(item.querySelector('.komponen-harga').value) || 0) * (parseFloat(item.querySelector('.komponen-volume').value) || 0);
+                // Perlu parse angka dari format Rupiah
+                const hargaString = item.querySelector('.komponen-harga').value.replace(/[^0-9]/g, '');
+                const harga = parseFloat(hargaString) || 0;
+                const volume = parseFloat(item.querySelector('.komponen-volume').value) || 0;
+                total += harga * volume;
             });
             document.getElementById('totalJumlah').textContent = formatRupiah(total);
         }
@@ -315,7 +319,8 @@
             let totalJumlah = 0;
             const rincianKomponen = [];
             document.querySelectorAll('.komponen-item').forEach(item => {
-                const harga = parseFloat(item.querySelector('.komponen-harga').value) || 0;
+                const hargaString = item.querySelector('.komponen-harga').value.replace(/[^0-9]/g, '');
+                const harga = parseFloat(hargaString) || 0;
                 const volume = parseFloat(item.querySelector('.komponen-volume').value) || 0;
                 const subtotal = harga * volume;
                 totalJumlah += subtotal;
@@ -346,9 +351,15 @@
                 alert('Realisasi kegiatan berhasil disimpan!');
                 kegiatanForm.reset();
                 kodeRekeningSelect.innerHTML = '<option value="">Pilih Sub Kegiatan Dulu</option>';
-                komponenList.innerHTML = `<div class="komponen-item">...</div>`;
+                // Reset baris komponen ke kondisi awal
+                komponenList.innerHTML = `<div class="komponen-item">
+                    <select class="komponen-pilihan" required><option value="">Pilih Kode Rekening Dulu</option></select>
+                    <input type="number" class="komponen-volume" placeholder="Volume" min="1" required>
+                    <input type="text" class="komponen-satuan" placeholder="Satuan" readonly>
+                    <input type="text" class="komponen-harga" placeholder="Harga (Rp)" readonly>
+                    <button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); updateTotal()">X</button>
+                </div>`;
                 updateTotal();
-                updateKomponenDropdowns();
             } catch (error) {
                 console.error("Error adding document: ", error);
                 alert('Gagal menyimpan data.');
