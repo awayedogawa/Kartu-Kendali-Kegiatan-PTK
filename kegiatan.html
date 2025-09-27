@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Kegiatan - Kartu Kendali PTK</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --primary-color: #0d6efd;
+            --danger-color: #dc3545;
+            --info-color: #6c757d;
+            --background-color: #f4f7f6;
+            --card-background: #ffffff;
+            --text-color: #212529;
+            --text-muted: #6c757d;
+            --border-color: #dee2e6;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+        }
+
+        body { font-family: 'Poppins', sans-serif; background-color: var(--background-color); color: var(--text-color); margin: 0; }
+
+        .header { background-color: var(--card-background); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .header .logo { font-weight: 700; font-size: 1.2em; color: var(--primary-color); }
+        .header .user-info { display: flex; align-items: center; gap: 15px; }
+        .header .user-details { text-align: right; }
+        .header .user-details .name { font-weight: 600; display: block; }
+        .header .user-details .role { font-size: 0.8em; color: var(--text-muted); text-transform: capitalize; }
+        
+        .btn-header { background-color: var(--info-color); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 500; text-decoration: none; font-size: 1em; }
+
+        .container { padding: 30px; }
+        .card { background-color: var(--card-background); padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 30px; }
+        .card h2 { margin-top: 0; }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { margin-bottom: 8px; font-weight: 500; font-size: 0.9em; }
+        .form-group input, .form-group select, .form-group textarea { padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 1em; font-family: 'Poppins', sans-serif; }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 1em; }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-submit { margin-top: 20px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background-color: #f8f9fa; font-weight: 600; }
+        td.amount { text-align: right; }
+
+        /* Style untuk status */
+        .status {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+            text-align: center;
+        }
+        .status-proses { background-color: var(--warning-color); color: #333; }
+        .status-pengajuan { background-color: var(--primary-color); color: white; }
+        .status-terbayarkan { background-color: var(--success-color); color: white; }
+
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo">SI-KENDALI PTK</div>
+        <div class="user-info">
+            <a href="index.html" class="btn-header" style="background-color: var(--primary-color);">&#8592; Kembali</a>
+            <div class="user-details">
+                <span class="name" id="userNameDisplay">Nama Pengguna</span>
+                <span class="role" id="userRoleDisplay">Peran</span>
+            </div>
+            <button id="logoutBtn" class="btn-header" style="background-color: var(--danger-color);">Logout</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Tambah Realisasi Kegiatan</h2>
+            <form id="kegiatanForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="tanggal">Tanggal</label>
+                        <input type="date" id="tanggal" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="subKegiatan">Pilih Sub Kegiatan</label>
+                        <select id="subKegiatan" required>
+                            <option value="">Memuat...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="kodeRekening">Pilih Kode Rekening</label>
+                        <select id="kodeRekening" required>
+                            <option value="">Pilih Sub Kegiatan Dulu</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="jumlah">Jumlah (Rp)</label>
+                        <input type="number" id="jumlah" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status" required>
+                            <option value="Proses Pembuatan TNT">Proses Pembuatan TNT</option>
+                            <option value="Pengajuan TNT">Pengajuan TNT</option>
+                            <option value="Terbayarkan">Terbayarkan</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="uraian">Uraian Kegiatan</label>
+                    <textarea id="uraian" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-submit">Simpan Kegiatan</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Riwayat Realisasi</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Sub Kegiatan</th>
+                        <th>Uraian</th>
+                        <th>Status</th>
+                        <th class="amount">Jumlah</th>
+                    </tr>
+                </thead>
+                <tbody id="riwayatTableBody">
+                    </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
+            authDomain: "kartu-kendali-kegiatan-ptk.firebaseapp.com",
+            projectId: "kartu-kendali-kegiatan-ptk",
+            storageBucket: "kartu-kendali-kegiatan-ptk.appspot.com",
+            messagingSenderId: "694993604999",
+            appId: "1:694993604999:web:83eaf3af3ddf0c5d0bc348322"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- Security & UI Setup ---
+        const userRole = sessionStorage.getItem('userRole');
+        const userName = sessionStorage.getItem('userName');
+        if (!userRole) {
+            alert('Akses ditolak! Silakan login.');
+            window.location.href = 'login.html';
+        }
+        document.getElementById('userNameDisplay').textContent = userName;
+        document.getElementById('userRoleDisplay').textContent = userRole;
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            sessionStorage.clear();
+            window.location.href = 'login.html';
+        });
+
+        const subKegiatanSelect = document.getElementById('subKegiatan');
+        const kodeRekeningSelect = document.getElementById('kodeRekening');
+        const kegiatanForm = document.getElementById('kegiatanForm');
+        const riwayatTableBody = document.getElementById('riwayatTableBody');
+        const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+
+        let dataAnggaran = [];
+
+        // --- Memuat Pilihan Dropdown ---
+        onSnapshot(collection(db, "anggaran"), (snapshot) => {
+            dataAnggaran = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            const subKegiatanUnik = [...new Map(dataAnggaran.map(item => [item['kodeSubKegiatan'], item])).values()];
+            
+            subKegiatanSelect.innerHTML = '<option value="">-- Pilih Sub Kegiatan --</option>';
+            subKegiatanUnik.sort((a,b) => a.kodeSubKegiatan.localeCompare(b.kodeSubKegiatan)).forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.kodeSubKegiatan;
+                option.textContent = `${item.kodeSubKegiatan} - ${item.namaSubKegiatan}`;
+                subKegiatanSelect.appendChild(option);
+            });
+        });
+
+        // --- Update Dropdown Kode Rekening saat Sub Kegiatan dipilih ---
+        subKegiatanSelect.addEventListener('change', () => {
+            const selectedKode = subKegiatanSelect.value;
+            kodeRekeningSelect.innerHTML = '<option value="">-- Pilih Kode Rekening --</option>';
+
+            if (selectedKode) {
+                const rekeningTerkait = dataAnggaran.filter(item => item.kodeSubKegiatan === selectedKode);
+                rekeningTerkait.sort((a,b) => a.kodeRekening.localeCompare(b.kodeRekening)).forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = `${item.kodeRekening} - ${item.uraian} (${formatRupiah(item.paguAnggaran)})`;
+                    kodeRekeningSelect.appendChild(option);
+                });
+            }
+        });
+
+        // --- Simpan Data Kegiatan Baru ---
+        kegiatanForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const docAnggaranId = kodeRekeningSelect.value;
+            const anggaranDipilih = dataAnggaran.find(item => item.id === docAnggaranId);
+
+            const realisasiBaru = {
+                tanggal: document.getElementById('tanggal').value,
+                uraian: document.getElementById('uraian').value,
+                jumlah: Number(document.getElementById('jumlah').value),
+                status: document.getElementById('status').value, // BARU: Simpan status
+                docAnggaranId: docAnggaranId,
+                kodeSubKegiatan: anggaranDipilih.kodeSubKegiatan,
+                namaSubKegiatan: anggaranDipilih.namaSubKegiatan,
+                diinputOleh: userName,
+                timestamp: new Date()
+            };
+
+            try {
+                await addDoc(collection(db, "transaksi"), realisasiBaru);
+                alert('Realisasi kegiatan berhasil disimpan!');
+                kegiatanForm.reset();
+                kodeRekeningSelect.innerHTML = '<option value="">Pilih Sub Kegiatan Dulu</option>';
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                alert('Gagal menyimpan data.');
+            }
+        });
+
+        // --- Tampilkan Riwayat Transaksi ---
+        const q = query(collection(db, "transaksi"), orderBy("timestamp", "desc"));
+        onSnapshot(q, (snapshot) => {
+            riwayatTableBody.innerHTML = '';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const row = document.createElement('tr');
+                
+                // Logika untuk style status
+                let statusClass = '';
+                if(data.status === 'Proses Pembuatan TNT') statusClass = 'status-proses';
+                if(data.status === 'Pengajuan TNT') statusClass = 'status-pengajuan';
+                if(data.status === 'Terbayarkan') statusClass = 'status-terbayarkan';
+
+                row.innerHTML = `
+                    <td>${data.tanggal}</td>
+                    <td>${data.namaSubKegiatan}</td>
+                    <td>${data.uraian}</td>
+                    <td><span class="status ${statusClass}">${data.status}</span></td>
+                    <td class="amount">${formatRupiah(data.jumlah)}</td>
+                `;
+                riwayatTableBody.appendChild(row);
+            });
+        });
+
+    </script>
+</body>
+</html>
