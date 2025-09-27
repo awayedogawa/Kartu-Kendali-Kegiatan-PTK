@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Komponen - Kartu Kendali PTK</title>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --info-color: #6c757d;
+            --background-color: #f4f7f6;
+            --card-background: #ffffff;
+            --text-color: #212529;
+            --text-muted: #6c757d;
+            --border-color: #e9ecef;
+        }
+
+        body { font-family: 'Poppins', sans-serif; background-color: var(--background-color); color: var(--text-color); margin: 0; }
+
+        .header { background-color: var(--card-background); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .header .logo { font-weight: 700; font-size: 1.2em; color: var(--primary-color); }
+        .header .user-info { display: flex; align-items: center; gap: 15px; }
+        .header .user-details { text-align: right; }
+        .header .user-details .name { font-weight: 600; display: block; }
+        .header .user-details .role { font-size: 0.8em; color: var(--text-muted); text-transform: capitalize; }
+        
+        .btn-header { background-color: var(--info-color); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 500; text-decoration: none; font-size: 1em; }
+
+        .container { padding: 30px; }
+        .card { background-color: var(--card-background); padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .card-header h2 { margin: 0; }
+        .header-actions .btn { margin-left: 10px; font-size: 0.9em; padding: 8px 15px; }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 1em; }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        #uploadLabel { cursor: pointer; }
+        #uploadFile { display: none; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background-color: #f8f9fa; font-weight: 600; }
+        td.harga { text-align: right; }
+        .action-buttons { text-align: right; white-space: nowrap; }
+        .btn-icon { background-color: transparent; border: none; cursor: pointer; padding: 6px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-left: 5px; }
+        .btn-icon:hover { background-color: #e9ecef; }
+        .btn-icon svg { width: 18px; height: 18px; }
+        .icon-delete { color: var(--danger-color); }
+
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo">SI-KENDALI PTK</div>
+        <div class="user-info">
+            <a href="index.html" class="btn-header" style="background-color: var(--primary-color);">&#8592; Kembali</a>
+            <div class="user-details">
+                <span class="name" id="userNameDisplay">Nama Pengguna</span>
+                <span class="role" id="userRoleDisplay">Peran</span>
+            </div>
+            <button id="logoutBtn" class="btn-header" style="background-color: var(--danger-color);">Logout</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2>Daftar Komponen & Harga</h2>
+                <div class="header-actions">
+                    <button id="downloadBtn" class="btn btn-primary">Download Template</button>
+                    <label for="uploadFile" id="uploadLabel" class="btn btn-success">Upload Komponen</label>
+                    <input type="file" id="uploadFile" accept=".xlsx, .xls">
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nama Komponen</th>
+                        <th class="harga">Harga Satuan</th>
+                        <th class="action-buttons">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="komponenTableBody">
+                    </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
+            authDomain: "kartu-kendali-kegiatan-ptk.firebaseapp.com",
+            projectId: "kartu-kendali-kegiatan-ptk",
+            storageBucket: "kartu-kendali-kegiatan-ptk.appspot.com",
+            messagingSenderId: "694993604999",
+            appId: "1:694993604999:web:83eaf3af3ddf0c5d0bc348322"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- Security & UI Setup ---
+        const userRole = sessionStorage.getItem('userRole');
+        const userName = sessionStorage.getItem('userName');
+        if (userRole !== 'admin') {
+            alert('Akses ditolak!');
+            window.location.href = 'index.html';
+        }
+        document.getElementById('userNameDisplay').textContent = userName;
+        document.getElementById('userRoleDisplay').textContent = userRole;
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            sessionStorage.clear();
+            window.location.href = 'login.html';
+        });
+
+        const komponenTableBody = document.getElementById('komponenTableBody');
+        const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+
+        // --- Read & Render Data ---
+        const komponenCollection = collection(db, "komponen");
+        onSnapshot(komponenCollection, (snapshot) => {
+            const allData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            allData.sort((a, b) => a.nama.localeCompare(b.nama)); // Urutkan berdasarkan nama
+
+            komponenTableBody.innerHTML = '';
+            allData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.nama}</td>
+                    <td class="harga">${formatRupiah(item.harga)}</td>
+                    <td class="action-buttons">
+                        <button class="btn-icon icon-delete" title="Hapus Komponen" data-id="${item.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                    </td>
+                `;
+                komponenTableBody.appendChild(row);
+            });
+        });
+        
+        // --- Delete ---
+        komponenTableBody.addEventListener('click', async (e) => {
+            const button = e.target.closest('.btn-icon');
+            if(button && button.dataset.id) {
+                const docId = button.dataset.id;
+                if(confirm('Yakin ingin menghapus komponen ini?')){
+                    await deleteDoc(doc(db, "komponen", docId));
+                    alert('Komponen berhasil dihapus.');
+                }
+            }
+        });
+
+        // --- Download & Upload Logic ---
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const templateData = [{ nama: "Honorarium Narasumber", harga: 500000 }];
+            const ws = XLSX.utils.json_to_sheet(templateData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Template Komponen");
+            XLSX.writeFile(wb, "template_komponen.xlsx");
+        });
+
+        document.getElementById('uploadFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const data = event.target.result;
+                    const workbook = XLSX.read(data, { type: 'buffer' });
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+                    if (confirm(`Ditemukan ${jsonData.length} baris data komponen. Unggah semua?`)) {
+                        const batch = writeBatch(db);
+                        jsonData.forEach(item => {
+                            if (item.nama && item.harga) {
+                                const docRef = doc(collection(db, "komponen"));
+                                batch.set(docRef, {
+                                    nama: String(item.nama),
+                                    harga: Number(item.harga)
+                                });
+                            }
+                        });
+                        await batch.commit();
+                        alert(`${jsonData.length} data berhasil diunggah.`);
+                    }
+                } catch (error) {
+                    alert("Gagal memproses file. Pastikan format kolom (nama, harga) sesuai template.");
+                } finally {
+                    document.getElementById('uploadFile').value = '';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+    </script>
+</body>
+</html>
