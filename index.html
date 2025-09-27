@@ -66,9 +66,8 @@
             border-radius: 5px;
             font-weight: 500;
         }
-        #paguButton { display: none; } /* Disembunyikan dulu, ditampilkan untuk admin via JS */
+        #paguButton, #komponenButton { display: none; } /* Sembunyikan tombol admin by default */
 
-        /* DIPERBARUI: Grid sekarang bisa 4 kolom */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
         .card { background-color: var(--card-background); padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .card h3 { margin-top: 0; font-size: 1em; color: var(--text-muted); font-weight: 500; }
@@ -104,7 +103,8 @@
                 <p>Berikut adalah ringkasan anggaran kegiatan Anda.</p>
             </div>
             <div class="header-buttons">
-                <a href="kegiatan.html" id="kegiatanButton" class="btn-header-action" style="background-color: var(--success-color);">+ Input Kegiatan</a>
+                <a href="kegiatan.html" class="btn-header-action" style="background-color: var(--success-color);">+ Input Kegiatan</a>
+                <a href="komponen.html" id="komponenButton" class="btn-header-action" style="background-color: var(--secondary-color);">Kelola Komponen</a>
                 <a href="pagu.html" id="paguButton" class="btn-header-action">Kelola Pagu</a>
             </div>
         </div>
@@ -165,14 +165,11 @@
         document.getElementById('userRoleDisplay').textContent = userRole;
         document.getElementById('welcomeMessage').textContent = `Selamat Datang, ${userName}!`;
         
+        // BARU: Tampilkan tombol admin jika role sesuai
         if (userRole === 'admin') {
             document.getElementById('paguButton').style.display = 'inline-block';
+            document.getElementById('komponenButton').style.display = 'inline-block';
         }
-        // Tombol input kegiatan ditampilkan untuk semua role
-        if (userRole !== 'atasan') { // Misal, atasan hanya melihat, tidak menginput
-             document.getElementById('kegiatanButton').style.display = 'inline-block';
-        }
-
 
         const logoutBtn = document.getElementById('logoutBtn');
         logoutBtn.addEventListener('click', () => {
@@ -180,23 +177,18 @@
             window.location.href = 'login.html';
         });
 
-        // ==========================================================
-        // DIPERBARUI: Fungsi memuat data dari koleksi 'anggaran' dan 'transaksi'
-        // ==========================================================
         async function loadDashboardData() {
             const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 
             const paguCollection = collection(db, "anggaran");
             const transaksiCollection = collection(db, "transaksi");
             
-            // Menggunakan onSnapshot agar data otomatis update jika ada perubahan
             onSnapshot(paguCollection, (paguSnapshot) => {
                 let totalPagu = 0;
                 paguSnapshot.forEach(doc => {
                     totalPagu += doc.data().paguAnggaran;
                 });
 
-                // Setelah mendapatkan total pagu, kita dengarkan perubahan di transaksi
                 onSnapshot(transaksiCollection, (transaksiSnapshot) => {
                     let totalTerbayarkan = 0;
                     let totalProses = 0;
@@ -205,15 +197,13 @@
                         const transaksi = doc.data();
                         if (transaksi.status === 'Terbayarkan') {
                             totalTerbayarkan += transaksi.jumlah;
-                        } else { // Status lainnya dianggap "Dalam Proses"
+                        } else {
                             totalProses += transaksi.jumlah;
                         }
                     });
 
-                    // Hitung sisa anggaran
                     const sisaAnggaran = totalPagu - (totalTerbayarkan + totalProses);
 
-                    // Tampilkan semua data ke UI
                     document.getElementById('totalPagu').textContent = formatRupiah(totalPagu);
                     document.getElementById('totalTerbayarkan').textContent = formatRupiah(totalTerbayarkan);
                     document.getElementById('totalProses').textContent = formatRupiah(totalProses);
