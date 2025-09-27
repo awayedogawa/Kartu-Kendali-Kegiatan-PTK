@@ -2,10 +2,10 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Input Kegiatan - Kartu Kendali PTK</title>
     <style>
-        @import url('https://fonts.googleapis.comcom/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
         
         :root {
             --primary-color: #0d6efd;
@@ -35,15 +35,23 @@
         .card { background-color: var(--card-background); padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 30px; }
         .card h2 { margin-top: 0; }
         
-        /* DIPERBARUI: Mengatur grid menjadi 2 kolom */
-        .form-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 20px; 
+        /* DIPERBARUI: Mengubah form menjadi bersusun ke bawah */
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
         .form-group { display: flex; flex-direction: column; }
         .form-group label { margin-bottom: 8px; font-weight: 500; font-size: 0.9em; }
-        .form-group input, .form-group select { padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 1em; font-family: 'Poppins', sans-serif; }
+        .form-group input, .form-group select { 
+            padding: 10px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 5px; 
+            font-size: 1em; 
+            font-family: 'Poppins', sans-serif;
+            max-width: 500px; /* Batas lebar maksimum untuk input */
+        }
+        #tanggal { max-width: 200px; } /* Lebar khusus untuk tanggal */
         
         .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 1em; }
         .btn-primary { background-color: var(--primary-color); color: white; }
@@ -61,7 +69,6 @@
         th { background-color: #f8f9fa; font-weight: 600; }
         td.amount { text-align: right; }
 
-        /* BARU: Style untuk status checklist */
         .status-group { display: flex; flex-wrap: wrap; gap: 10px; }
         .status-group label {
             display: inline-flex;
@@ -73,15 +80,12 @@
             transition: all 0.2s;
         }
         .status-group input[type="radio"] { display: none; }
-        .status-group input[type="radio"]:checked + span {
-            font-weight: 600;
-        }
+        .status-group input[type="radio"]:checked + span { font-weight: 600; }
         .status-group label:has(input[value="Proses Pembuatan TNT"]:checked) { background-color: var(--warning-color); color: #333; border-color: var(--warning-color); }
         .status-group label:has(input[value="Pengajuan TNT"]:checked) { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
         .status-group label:has(input[value="Terbayarkan"]:checked) { background-color: var(--success-color); color: white; border-color: var(--success-color); }
 
         @media (max-width: 768px) {
-            .form-grid { grid-template-columns: 1fr; }
             .komponen-item { grid-template-columns: 1fr; gap: 8px; }
         }
     </style>
@@ -104,20 +108,12 @@
         <div class="card">
             <h2>Tambah Realisasi Kegiatan</h2>
             <form id="kegiatanForm">
-                <div class="form-grid">
+                <div class="form-container">
                     <div class="form-group">
                         <label for="tanggal">Tanggal</label>
                         <input type="date" id="tanggal" required>
                     </div>
-                    <div class="form-group">
-                        <label>Status</label>
-                        <div id="formStatus" class="status-group" style="padding-top: 5px;">
-                            <label><input type="radio" name="status" value="Proses Pembuatan TNT" checked> <span>Proses Pembuatan TNT</span></label>
-                            <label><input type="radio" name="status" value="Pengajuan TNT"> <span>Pengajuan TNT</span></label>
-                            <label><input type="radio" name="status" value="Terbayarkan"> <span>Terbayarkan</span></label>
-                        </div>
-                    </div>
-                    <div class="form-group">
+                     <div class="form-group">
                         <label for="subKegiatan">Pilih Sub Kegiatan</label>
                         <select id="subKegiatan" required>
                             <option value="">Memuat...</option>
@@ -128,6 +124,14 @@
                         <select id="kodeRekening" required>
                             <option value="">Pilih Sub Kegiatan Dulu</option>
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <div id="formStatus" class="status-group">
+                            <label><input type="radio" name="status" value="Proses Pembuatan TNT" checked> <span>Proses Pembuatan TNT</span></label>
+                            <label><input type="radio" name="status" value="Pengajuan TNT"> <span>Pengajuan TNT</span></label>
+                            <label><input type="radio" name="status" value="Terbayarkan"> <span>Terbayarkan</span></label>
+                        </div>
                     </div>
                 </div>
 
@@ -258,7 +262,6 @@
             if (e.target.classList.contains('komponen-volume')) {
                 updateTotal();
             }
-            // BARU: Event listener untuk update status dari tabel riwayat
             if (e.target.name && e.target.name.startsWith('status_')) {
                 const docId = e.target.name.split('_')[1];
                 const newStatus = e.target.value;
@@ -310,7 +313,7 @@
 
             const realisasiBaru = {
                 tanggal: document.getElementById('tanggal').value,
-                status: document.querySelector('input[name="status"]:checked').value, // Ambil dari radio button
+                status: document.querySelector('input[name="status"]:checked').value,
                 jumlah: totalJumlah,
                 rincian: rincianKomponen,
                 docAnggaranId: docAnggaranId,
@@ -325,7 +328,7 @@
                 alert('Realisasi kegiatan berhasil disimpan!');
                 kegiatanForm.reset();
                 kodeRekeningSelect.innerHTML = '<option value="">Pilih Sub Kegiatan Dulu</option>';
-                komponenList.innerHTML = `<div class="komponen-item">...</div>`; // Disederhanakan
+                komponenList.innerHTML = `<div class="komponen-item">...</div>`;
                 updateTotal();
                 updateKomponenDropdowns();
             } catch (error) {
@@ -341,7 +344,6 @@
                 const data = doc.data();
                 const docId = doc.id;
                 const row = document.createElement('tr');
-                // BARU: Buat radio button untuk setiap status di tabel
                 const statusHTML = `
                     <div class="status-group">
                         <label><input type="radio" name="status_${docId}" value="Proses Pembuatan TNT" ${data.status === 'Proses Pembuatan TNT' ? 'checked' : ''}> <span>Proses</span></label>
@@ -359,7 +361,6 @@
             });
         });
         
-        // BARU: Fungsi untuk update status di Firestore
         async function updateStatus(docId, newStatus) {
             const docRef = doc(db, "transaksi", docId);
             try {
