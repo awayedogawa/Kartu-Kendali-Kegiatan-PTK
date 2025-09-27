@@ -32,7 +32,7 @@
         .btn-header { background-color: var(--info-color); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 500; text-decoration: none; font-size: 1em; }
 
         .container { padding: 30px; }
-        .card { background-color: var(--card-background); padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .card { background-color: var(--card-background); padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 30px;}
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .card-header h2 { margin: 0; }
         .header-actions .btn { margin-left: 10px; font-size: 0.9em; padding: 8px 15px; }
@@ -43,6 +43,12 @@
         .btn-danger { background-color: var(--danger-color); color: white; }
         #uploadLabel { cursor: pointer; }
         #uploadFile { display: none; }
+        
+        .form-grid { display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 20px; align-items: flex-end; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { margin-bottom: 8px; font-weight: 500; font-size: 0.9em; }
+        .form-group input, .form-group select { padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 1em; }
+
 
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
@@ -72,6 +78,29 @@
 
     <main class="container">
         <div class="card">
+            <h2>Input Komponen Manual</h2>
+            <form id="komponenForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="kodeRekening">Pilih Kode Rekening</label>
+                        <select id="kodeRekening" required>
+                            <option value="">Memuat...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="namaKomponen">Nama Komponen</label>
+                        <input type="text" id="namaKomponen" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="hargaKomponen">Harga Satuan (Rp)</label>
+                        <input type="number" id="hargaKomponen" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
             <div class="card-header">
                 <h2>Daftar Komponen & Harga</h2>
                 <div class="header-actions">
@@ -83,6 +112,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th>Kode Rekening</th>
                         <th>Nama Komponen</th>
                         <th class="harga">Harga Satuan</th>
                         <th class="action-buttons">Aksi</th>
@@ -96,7 +126,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, deleteDoc, writeBatch, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
@@ -124,19 +154,37 @@
             window.location.href = 'login.html';
         });
 
+        const komponenForm = document.getElementById('komponenForm');
+        const kodeRekeningSelect = document.getElementById('kodeRekening');
         const komponenTableBody = document.getElementById('komponenTableBody');
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+
+        // --- BARU: Muat Pilihan Kode Rekening ---
+        onSnapshot(collection(db, "anggaran"), (snapshot) => {
+            const rekeningData = snapshot.docs.map(doc => doc.data());
+            const rekeningUnik = [...new Map(rekeningData.map(item => [item['kodeRekening'], item])).values()];
+            
+            kodeRekeningSelect.innerHTML = '<option value="">-- Pilih Kode Rekening --</option>';
+            rekeningUnik.sort((a,b) => a.kodeRekening.localeCompare(b.kodeRekening)).forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.kodeRekening;
+                option.textContent = `${item.kodeRekening} - ${item.uraian}`;
+                kodeRekeningSelect.appendChild(option);
+            });
+        });
+
 
         // --- Read & Render Data ---
         const komponenCollection = collection(db, "komponen");
         onSnapshot(komponenCollection, (snapshot) => {
             const allData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            allData.sort((a, b) => a.nama.localeCompare(b.nama)); // Urutkan berdasarkan nama
+            allData.sort((a, b) => a.nama.localeCompare(b.nama));
 
             komponenTableBody.innerHTML = '';
             allData.forEach(item => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
+                    <td>${item.kodeRekening || ''}</td>
                     <td>${item.nama}</td>
                     <td class="harga">${formatRupiah(item.harga)}</td>
                     <td class="action-buttons">
@@ -149,6 +197,24 @@
             });
         });
         
+        // --- BARU: Create (Input Manual) ---
+        komponenForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newKomponen = {
+                kodeRekening: document.getElementById('kodeRekening').value,
+                nama: document.getElementById('namaKomponen').value,
+                harga: Number(document.getElementById('hargaKomponen').value)
+            };
+            try {
+                await addDoc(komponenCollection, newKomponen);
+                alert('Komponen baru berhasil disimpan.');
+                komponenForm.reset();
+            } catch (error) {
+                alert('Gagal menyimpan komponen.');
+                console.error(error);
+            }
+        });
+
         // --- Delete ---
         komponenTableBody.addEventListener('click', async (e) => {
             const button = e.target.closest('.btn-icon');
@@ -161,9 +227,9 @@
             }
         });
 
-        // --- Download & Upload Logic ---
+        // --- Download & Upload Logic (DIPERBARUI) ---
         document.getElementById('downloadBtn').addEventListener('click', () => {
-            const templateData = [{ nama: "Honorarium Narasumber", harga: 500000 }];
+            const templateData = [{ kodeRekening: "1.01.01.2.02.0001", nama: "Honorarium Narasumber", harga: 500000 }];
             const ws = XLSX.utils.json_to_sheet(templateData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Template Komponen");
@@ -183,9 +249,10 @@
                     if (confirm(`Ditemukan ${jsonData.length} baris data komponen. Unggah semua?`)) {
                         const batch = writeBatch(db);
                         jsonData.forEach(item => {
-                            if (item.nama && item.harga) {
+                            if (item.nama && item.harga && item.kodeRekening) {
                                 const docRef = doc(collection(db, "komponen"));
                                 batch.set(docRef, {
+                                    kodeRekening: String(item.kodeRekening),
                                     nama: String(item.nama),
                                     harga: Number(item.harga)
                                 });
@@ -195,7 +262,7 @@
                         alert(`${jsonData.length} data berhasil diunggah.`);
                     }
                 } catch (error) {
-                    alert("Gagal memproses file. Pastikan format kolom (nama, harga) sesuai template.");
+                    alert("Gagal memproses file. Pastikan format kolom (kodeRekening, nama, harga) sesuai template.");
                 } finally {
                     document.getElementById('uploadFile').value = '';
                 }
