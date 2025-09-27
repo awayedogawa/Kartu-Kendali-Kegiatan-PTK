@@ -49,13 +49,7 @@
         .btn-danger { background-color: var(--danger-color); color: white; }
         .btn-submit { margin-top: 20px; }
 
-        /* BARU: Style untuk info sisa pagu */
-        .sisa-pagu-info {
-            font-size: 0.85em;
-            font-weight: 500;
-            color: var(--info-color);
-            margin-top: 8px;
-        }
+        .sisa-pagu-info { font-size: 0.85em; font-weight: 500; color: var(--info-color); margin-top: 8px; }
 
         .komponen-container { margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 20px; }
         .komponen-item {
@@ -96,15 +90,28 @@
     </style>
 </head>
 <body>
-    <header class="header"></header>
-    
+    <header class="header">
+        <div class="logo">SI-KENDALI PTK</div>
+        <div class="user-info">
+            <a href="index.html" class="btn-header" style="background-color: var(--primary-color);">&#8592; Kembali</a>
+            <div class="user-details">
+                <span class="name" id="userNameDisplay">Nama</span>
+                <span class="role" id="userRoleDisplay">Role</span>
+            </div>
+            <button id="logoutBtn" class="btn-header" style="background-color: var(--danger-color);">Logout</button>
+        </div>
+    </header>
+
     <main class="container">
         <div class="card">
             <h2 id="formTitle">Tambah Realisasi Kegiatan</h2>
             <form id="kegiatanForm">
                 <input type="hidden" id="editId">
                 <div class="form-container">
-                    <div class="form-group"><label for="tanggal">Tanggal</label><input type="date" id="tanggal" required></div>
+                    <div class="form-group">
+                        <label for="tanggal">Tanggal</label>
+                        <input type="date" id="tanggal" required>
+                    </div>
                     <div class="form-group">
                         <label for="subKegiatan">Pilih Sub Kegiatan</label>
                         <select id="subKegiatan" required><option value="">Memuat...</option></select>
@@ -129,13 +136,21 @@
             </table>
         </div>
     </main>
-    <div id="namaKegiatanModal" class="modal"></div>
+    <div id="namaKegiatanModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Masukkan Nama Kegiatan</h2>
+            <form id="namaKegiatanForm">
+                <div class="form-group"><label for="namaKegiatanInput">Nama Kegiatan</label><input type="text" id="namaKegiatanInput" required></div>
+                <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Simpan Kegiatan</button>
+            </form>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, getDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
         
-        // ... (Firebase config tetap sama) ...
         const firebaseConfig = {
             apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
             authDomain: "kartu-kendali-kegiatan-ptk.firebaseapp.com",
@@ -147,117 +162,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
-        // ... (Elemen DOM dan setup UI lainnya tetap sama) ...
-        const subKegiatanSelect = document.getElementById('subKegiatan');
-        const sisaPaguSubKegiatan = document.getElementById('sisaPaguSubKegiatan');
-        let dataAnggaran = [], dataKomponen = [], realisasi = {};
-
-        // BARU: Dengarkan perubahan di koleksi transaksi untuk menghitung realisasi
-        onSnapshot(collection(db, "transaksi"), (snapshot) => {
-            realisasi = {}; // Reset setiap ada perubahan
-            snapshot.forEach(doc => {
-                const trx = doc.data();
-                const id = trx.docAnggaranId;
-                if (!realisasi[id]) {
-                    realisasi[id] = 0;
-                }
-                realisasi[id] += trx.jumlah;
-            });
-            // Update tampilan jika sub kegiatan sudah dipilih
-            if (subKegiatanSelect.value) {
-                subKegiatanSelect.dispatchEvent(new Event('change'));
-            }
-        });
-
-        onSnapshot(collection(db, "anggaran"), (snapshot) => {
-            dataAnggaran = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            // ... (logika populate sub kegiatan select tetap sama) ...
-        });
-        onSnapshot(collection(db, "komponen"), (snapshot) => { dataKomponen = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
-        
-        function populateRekeningDropdown(selectElement, selectedValue = '') {
-            const selectedSubKegiatan = subKegiatanSelect.value;
-            selectElement.innerHTML = '<option value="">-- Pilih Kode Rekening --</option>';
-            if (selectedSubKegiatan) {
-                const rekeningTerkait = dataAnggaran.filter(item => item.kodeSubKegiatan === selectedSubKegiatan);
-                rekeningTerkait.sort((a,b) => a.kodeRekening.localeCompare(b.kodeRekening)).forEach(item => {
-                    // BARU: Hitung dan tampilkan sisa pagu per rekening
-                    const pagu = item.paguAnggaran;
-                    const terpakai = realisasi[item.id] || 0;
-                    const sisa = pagu - terpakai;
-                    const option = document.createElement('option');
-                    option.value = item.id;
-                    option.textContent = `${item.kodeRekening} - ${item.uraian} (Sisa: ${formatRupiah(sisa)})`;
-                    option.disabled = sisa <= 0; // Nonaktifkan jika pagu habis
-                    selectElement.appendChild(option);
-                });
-            }
-            selectElement.value = selectedValue;
-        }
-        
-        // ... (Fungsi populateKomponenDropdown tetap sama) ...
-
-        document.addEventListener('change', (e) => {
-            if (e.target.id === 'subKegiatan') {
-                const selectedKode = e.target.value;
-                document.querySelectorAll('.rekening-pilihan').forEach(el => populateRekeningDropdown(el));
-                
-                // BARU: Hitung dan tampilkan sisa pagu total sub kegiatan
-                let totalPaguSub = 0;
-                let totalRealisasiSub = 0;
-                const rekeningTerkait = dataAnggaran.filter(item => item.kodeSubKegiatan === selectedKode);
-                rekeningTerkait.forEach(item => {
-                    totalPaguSub += item.paguAnggaran;
-                    totalRealisasiSub += (realisasi[item.id] || 0);
-                });
-                const sisaTotal = totalPaguSub - totalRealisasiSub;
-                sisaPaguSubKegiatan.textContent = `Sisa Pagu Sub Kegiatan: ${formatRupiah(sisaTotal)}`;
-            }
-            // ... (event listener lainnya tetap sama) ...
-        });
-        
-        function createKomponenItem(data = {}) {
-            const newItem = document.createElement('div');
-            newItem.className = 'komponen-item';
-            // DIPERBARUI: Dropdown rekening dipindah ke sini
-            newItem.innerHTML = `
-                <select class="rekening-pilihan" required><option value="">Pilih Rekening</option></select>
-                <select class="komponen-pilihan" required><option value="">Pilih Rekening Dulu</option></select>
-                <input type="number" class="komponen-volume" placeholder="Volume" min="1" required value="${data.volume || ''}">
-                <input type="text" class="komponen-satuan" placeholder="Satuan" readonly value="${data.satuan || ''}">
-                <input type="text" class="komponen-harga" placeholder="Harga (Rp)" readonly value="${data.harga ? formatRupiah(data.harga) : ''}">
-                <button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); updateTotal()">X</button>
-            `;
-            komponenList.appendChild(newItem);
-            const rekeningSelect = newItem.querySelector('.rekening-pilihan');
-            const komponenSelect = newItem.querySelector('.komponen-pilihan');
-            
-            // Mengisi dropdown rekening untuk baris baru ini
-            populateRekeningDropdown(rekeningSelect, data.docAnggaranId);
-            
-            // Jika dalam mode edit, isi juga komponennya
-            if(data.docAnggaranId) {
-                 const anggaran = dataAnggaran.find(a => a.id === data.docAnggaranId);
-                 if(anggaran) populateKomponenDropdown(komponenSelect, anggaran.kodeRekening, data.nama);
-            }
-        }
-        
-        // ... (sisa kode seperti updateTotal, addKomponenBtn, logika form submit, dll sebagian besar tetap sama,
-        //      namun perlu penyesuaian di bagian pengambilan data dari form karena struktur berubah) ...
-        
-        // Catatan: Kode lengkap JavaScript akan sangat panjang. Bagian di atas adalah perubahan intinya.
-        // Kode di bawah ini adalah versi lengkap dari file ini.
-    </script>
-
-    <script type="module" id="full-script">
-        // Kosongkan script sebelumnya agar tidak duplikat
-        const oldScript = document.getElementById('full-script').previousElementSibling;
-        if(oldScript && oldScript.type === 'module') oldScript.innerHTML = '';
-
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, getDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-        
-        const db = getFirestore(initializeApp(firebaseConfig));
-
         const userRole = sessionStorage.getItem('userRole');
         const userName = sessionStorage.getItem('userName');
         if (!userRole) { window.location.href = 'login.html'; }
@@ -285,7 +189,6 @@
             realisasi = {};
             snapshot.forEach(doc => {
                 const trx = doc.data();
-                // Hitung realisasi berdasarkan docAnggaranId di dalam rincian
                 trx.rincian.forEach(item => {
                     const id = item.docAnggaranId;
                     if (!realisasi[id]) realisasi[id] = 0;
@@ -329,9 +232,12 @@
             selectElement.value = selectedValue;
         }
         
-        function populateKomponenDropdown(selectElement, filterKodeRekening = '', selectedValue = '') {
-             const anggaran = dataAnggaran.find(a => a.id === filterKodeRekening);
-             if(!anggaran) return;
+        function populateKomponenDropdown(selectElement, filterAnggaranId = '', selectedValue = '') {
+             const anggaran = dataAnggaran.find(a => a.id === filterAnggaranId);
+             if(!anggaran) {
+                 selectElement.innerHTML = '<option value="">Pilih Rekening Dulu</option>';
+                 return;
+            };
              
              const filteredKomponen = dataKomponen.filter(item => item.kodeRekening === anggaran.kodeRekening);
              selectElement.innerHTML = filteredKomponen.length === 0 ? '<option value="">Tidak ada komponen</option>' : '<option value="">Pilih Komponen</option>';
@@ -401,6 +307,7 @@
             let paguTerlampaui = false;
             document.querySelectorAll('.komponen-item').forEach(item => {
                 const docAnggaranId = item.querySelector('.rekening-pilihan').value;
+                if (!docAnggaranId) return;
                 const anggaran = dataAnggaran.find(a => a.id === docAnggaranId);
                 const sisa = (anggaran.paguAnggaran || 0) - (realisasi[docAnggaranId] || 0);
                 const hargaString = item.querySelector('.komponen-harga').value.replace(/[^0-9]/g, '');
@@ -440,7 +347,75 @@
             } catch (error) { alert('Gagal menyimpan data.'); console.error(error); }
         });
         
-        // ... (fungsi resetForm, onSnapshot untuk tabel riwayat, dan listener untuk edit/delete tetap sama) ...
+        function resetForm() {
+            kegiatanForm.reset();
+            namaKegiatanForm.reset();
+            editIdInput.value = '';
+            namaKegiatanModal.style.display = 'none';
+            komponenList.innerHTML = '';
+            addKomponenBtn.click();
+            formTitle.textContent = 'Tambah Realisasi Kegiatan';
+            cancelEditBtn.style.display = 'none';
+        }
+        cancelEditBtn.addEventListener('click', resetForm);
+
+        onSnapshot(query(collection(db, "transaksi"), orderBy("timestamp", "desc")), (snapshot) => {
+            kegiatanTableBody.innerHTML = '';
+            snapshot.forEach(doc => {
+                const data = doc.data(); const docId = doc.id; const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${data.tanggal}</td>
+                    <td>${data.namaSubKegiatan}</td>
+                    <td>${data.namaKegiatan}</td>
+                    <td class="amount">${formatRupiah(data.jumlah)}</td>
+                    <td class="action-buttons">
+                        <button class="btn-icon icon-edit" title="Edit Kegiatan" data-id="${docId}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                        <button class="btn-icon icon-delete" title="Hapus Kegiatan" data-id="${docId}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                    </td>
+                `;
+                kegiatanTableBody.appendChild(row);
+            });
+        });
+
+        kegiatanTableBody.addEventListener('click', async (e) => {
+            const button = e.target.closest('.btn-icon');
+            if(!button) return;
+            const docId = button.dataset.id;
+            if (button.classList.contains('icon-delete')) {
+                if(confirm('Yakin ingin menghapus kegiatan ini?')) {
+                    await deleteDoc(doc(db, "transaksi", docId));
+                    alert('Kegiatan berhasil dihapus.');
+                }
+            }
+            if (button.classList.contains('icon-edit')) {
+                const docRef = doc(db, "transaksi", docId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    formTitle.textContent = 'Edit Realisasi Kegiatan';
+                    editIdInput.value = docId;
+                    document.getElementById('tanggal').value = data.tanggal;
+                    subKegiatanSelect.value = data.kodeSubKegiatan;
+                    // Trigger change untuk memuat sisa pagu & rekening
+                    subKegiatanSelect.dispatchEvent(new Event('change'));
+                    
+                    document.getElementById('namaKegiatanInput').value = data.namaKegiatan;
+                    komponenList.innerHTML = '';
+                    
+                    // Butuh jeda singkat agar dropdown rekening terisi sebelum kita set nilainya
+                    setTimeout(() => {
+                        data.rincian.forEach(item => createKomponenItem(item));
+                        updateTotal();
+                    }, 200);
+
+                    cancelEditBtn.style.display = 'inline-block';
+                    window.scrollTo(0, 0);
+                }
+            }
+        });
+
+        closeBtn.onclick = () => namaKegiatanModal.style.display = 'none';
+        window.onclick = (event) => { if (event.target == namaKegiatanModal) { namaKegiatanModal.style.display = 'none'; } };
     </script>
 </body>
 </html>
