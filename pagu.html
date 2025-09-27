@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Pagu - Kartu Kendali PTK</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --primary-color: #0d6efd;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --background-color: #f4f7f6;
+            --card-background: #ffffff;
+            --text-color: #212529;
+            --text-muted: #6c757d;
+            --border-color: #dee2e6;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+        }
+
+        .header {
+            background-color: var(--card-background);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .header .logo { font-weight: 700; font-size: 1.2em; color: var(--primary-color); }
+        .header .user-info { display: flex; align-items: center; }
+        .header .user-details { text-align: right; margin-right: 15px; }
+        .header .user-details .name { font-weight: 600; display: block; }
+        .header .user-details .role { font-size: 0.8em; color: var(--text-muted); text-transform: capitalize; }
+        #logoutBtn { background-color: var(--danger-color); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 500; }
+
+        .container { padding: 30px; }
+        
+        .card {
+            background-color: var(--card-background);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .card h2 { margin-top: 0; }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { margin-bottom: 8px; font-weight: 500; font-size: 0.9em; }
+        .form-group input { padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 1em; }
+        
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 1em; }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-submit { margin-top: 20px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background-color: #f8f9fa; font-weight: 600; }
+        .action-buttons button { margin-right: 5px; padding: 5px 10px; font-size: 0.9em; }
+        .btn-warning { background-color: var(--warning-color); color: #333; }
+        .btn-danger { background-color: var(--danger-color); color: white; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo">SI-KENDALI PTK</div>
+        <div class="user-info">
+            <div class="user-details">
+                <span class="name" id="userNameDisplay">Nama Pengguna</span>
+                <span class="role" id="userRoleDisplay">Peran</span>
+            </div>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Tambah Pagu Anggaran Baru</h2>
+            <form id="paguForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="kodeRekening">Kode Rekening</label>
+                        <input type="text" id="kodeRekening" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="namaKegiatan">Nama Sub Kegiatan</label>
+                        <input type="text" id="namaKegiatan" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="paguAnggaran">Jumlah Pagu (Rp)</label>
+                        <input type="number" id="paguAnggaran" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tahunAnggaran">Tahun</label>
+                        <input type="number" id="tahunAnggaran" placeholder="Contoh: 2025" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-submit">Simpan Pagu</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Daftar Pagu Anggaran</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Kode Rekening</th>
+                        <th>Nama Sub Kegiatan</th>
+                        <th>Pagu Anggaran</th>
+                        <th>Tahun</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="paguTableBody">
+                    </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
+            authDomain: "kartu-kendali-kegiatan-ptk.firebaseapp.com",
+            projectId: "kartu-kendali-kegiatan-ptk",
+            storageBucket: "kartu-kendali-kegiatan-ptk.appspot.com",
+            messagingSenderId: "694993604999",
+            appId: "1:694993604999:web:83eaf3af3ddf0c5d0bc348322"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- Security Guard & User Info ---
+        const userRole = sessionStorage.getItem('userRole');
+        const userName = sessionStorage.getItem('userName');
+        
+        if (userRole !== 'admin') {
+            alert('Akses ditolak! Halaman ini khusus untuk Admin.');
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('userNameDisplay').textContent = userName;
+        document.getElementById('userRoleDisplay').textContent = userRole;
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            sessionStorage.clear();
+            window.location.href = 'login.html';
+        });
+
+        const paguForm = document.getElementById('paguForm');
+        const paguTableBody = document.getElementById('paguTableBody');
+        const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+
+        // --- Create (Menambah Pagu Baru) ---
+        paguForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPagu = {
+                kodeRekening: document.getElementById('kodeRekening').value,
+                namaKegiatan: document.getElementById('namaKegiatan').value,
+                paguAnggaran: Number(document.getElementById('paguAnggaran').value),
+                tahunAnggaran: Number(document.getElementById('tahunAnggaran').value),
+            };
+
+            try {
+                await addDoc(collection(db, "sub_kegiatan"), newPagu);
+                alert('Pagu berhasil ditambahkan!');
+                paguForm.reset();
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                alert('Gagal menambahkan pagu.');
+            }
+        });
+
+        // --- Read (Membaca dan Menampilkan Pagu) ---
+        onSnapshot(collection(db, "sub_kegiatan"), (snapshot) => {
+            paguTableBody.innerHTML = ''; // Kosongkan tabel sebelum diisi
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${data.kodeRekening}</td>
+                    <td>${data.namaKegiatan}</td>
+                    <td>${formatRupiah(data.paguAnggaran)}</td>
+                    <td>${data.tahunAnggaran}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-danger" data-id="${doc.id}">Hapus</button>
+                    </td>
+                `;
+                paguTableBody.appendChild(row);
+            });
+        });
+
+        // --- Delete (Menghapus Pagu) ---
+        paguTableBody.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('btn-danger')) {
+                const docId = e.target.dataset.id;
+                if (confirm('Apakah Anda yakin ingin menghapus data pagu ini?')) {
+                    try {
+                        await deleteDoc(doc(db, "sub_kegiatan", docId));
+                        alert('Data berhasil dihapus.');
+                    } catch (error) {
+                        console.error("Error removing document: ", error);
+                        alert('Gagal menghapus data.');
+                    }
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>
