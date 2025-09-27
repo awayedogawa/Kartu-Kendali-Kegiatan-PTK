@@ -18,6 +18,7 @@
             --success-color: #198754;
             --warning-color: #ffc107;
             --danger-color: #dc3545;
+            --info-color: #0dcaf0;
         }
 
         body {
@@ -49,29 +50,33 @@
         .welcome-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 20px;
+            gap: 15px;
         }
 
         .welcome-header h1 { margin-top: 0; margin-bottom: 5px; font-weight: 600; }
         .welcome-header p { margin-top: 0; color: var(--text-muted); }
-        .btn-pagu {
+        .header-buttons { display: flex; gap: 10px; }
+        .btn-header-action {
             background-color: var(--primary-color);
             color: white;
             text-decoration: none;
             padding: 10px 20px;
             border-radius: 5px;
             font-weight: 500;
-            display: none; /* Disembunyikan dulu, ditampilkan untuk admin via JS */
         }
+        #paguButton { display: none; } /* Disembunyikan dulu, ditampilkan untuk admin via JS */
 
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        /* DIPERBARUI: Grid sekarang bisa 4 kolom */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
         .card { background-color: var(--card-background); padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .card h3 { margin-top: 0; font-size: 1em; color: var(--text-muted); font-weight: 500; }
         .card .amount { font-size: 2em; font-weight: 700; margin-top: 10px; }
         .card.pagu .amount { color: var(--primary-color); }
-        .card.realisasi .amount { color: var(--warning-color); }
-        .card.sisa .amount { color: var(--success-color); }
+        .card.terbayarkan .amount { color: var(--success-color); }
+        .card.proses .amount { color: var(--warning-color); }
+        .card.sisa .amount { color: var(--danger-color); }
 
         .recent-activities { margin-top: 30px; background-color: var(--card-background); padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .recent-activities h2 { margin-top: 0; }
@@ -98,7 +103,10 @@
                 <h1 id="welcomeMessage">Selamat Datang!</h1>
                 <p>Berikut adalah ringkasan anggaran kegiatan Anda.</p>
             </div>
-            <a href="pagu.html" id="paguButton" class="btn-pagu">Kelola Pagu</a>
+            <div class="header-buttons">
+                <a href="kegiatan.html" id="kegiatanButton" class="btn-header-action" style="background-color: var(--success-color);">+ Input Kegiatan</a>
+                <a href="pagu.html" id="paguButton" class="btn-header-action">Kelola Pagu</a>
+            </div>
         </div>
 
         <div class="dashboard-grid">
@@ -106,9 +114,13 @@
                 <h3>Total Pagu Anggaran</h3>
                 <div class="amount" id="totalPagu">Memuat...</div>
             </div>
-            <div class="card realisasi">
-                <h3>Total Realisasi</h3>
-                <div class="amount" id="totalRealisasi">Rp 0</div>
+            <div class="card terbayarkan">
+                <h3>Total Terbayarkan</h3>
+                <div class="amount" id="totalTerbayarkan">Memuat...</div>
+            </div>
+            <div class="card proses">
+                <h3>Dalam Proses</h3>
+                <div class="amount" id="totalProses">Memuat...</div>
             </div>
             <div class="card sisa">
                 <h3>Sisa Anggaran</h3>
@@ -153,10 +165,14 @@
         document.getElementById('userRoleDisplay').textContent = userRole;
         document.getElementById('welcomeMessage').textContent = `Selamat Datang, ${userName}!`;
         
-        // BARU: Tampilkan tombol "Kelola Pagu" hanya jika role adalah admin
         if (userRole === 'admin') {
             document.getElementById('paguButton').style.display = 'inline-block';
         }
+        // Tombol input kegiatan ditampilkan untuk semua role
+        if (userRole !== 'atasan') { // Misal, atasan hanya melihat, tidak menginput
+             document.getElementById('kegiatanButton').style.display = 'inline-block';
+        }
+
 
         const logoutBtn = document.getElementById('logoutBtn');
         logoutBtn.addEventListener('click', () => {
@@ -165,27 +181,44 @@
         });
 
         // ==========================================================
-        // DIPERBARUI: Fungsi untuk memuat data dari Firestore
+        // DIPERBARUI: Fungsi memuat data dari koleksi 'anggaran' dan 'transaksi'
         // ==========================================================
         async function loadDashboardData() {
             const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 
             const paguCollection = collection(db, "anggaran");
+            const transaksiCollection = collection(db, "transaksi");
             
             // Menggunakan onSnapshot agar data otomatis update jika ada perubahan
-            onSnapshot(paguCollection, (snapshot) => {
+            onSnapshot(paguCollection, (paguSnapshot) => {
                 let totalPagu = 0;
-                snapshot.forEach(doc => {
+                paguSnapshot.forEach(doc => {
                     totalPagu += doc.data().paguAnggaran;
                 });
 
-                // Untuk saat ini, realisasi masih 0
-                const totalRealisasi = 0;
-                const sisaAnggaran = totalPagu - totalRealisasi;
+                // Setelah mendapatkan total pagu, kita dengarkan perubahan di transaksi
+                onSnapshot(transaksiCollection, (transaksiSnapshot) => {
+                    let totalTerbayarkan = 0;
+                    let totalProses = 0;
+                    
+                    transaksiSnapshot.forEach(doc => {
+                        const transaksi = doc.data();
+                        if (transaksi.status === 'Terbayarkan') {
+                            totalTerbayarkan += transaksi.jumlah;
+                        } else { // Status lainnya dianggap "Dalam Proses"
+                            totalProses += transaksi.jumlah;
+                        }
+                    });
 
-                document.getElementById('totalPagu').textContent = formatRupiah(totalPagu);
-                document.getElementById('totalRealisasi').textContent = formatRupiah(totalRealisasi);
-                document.getElementById('sisaAnggaran').textContent = formatRupiah(sisaAnggaran);
+                    // Hitung sisa anggaran
+                    const sisaAnggaran = totalPagu - (totalTerbayarkan + totalProses);
+
+                    // Tampilkan semua data ke UI
+                    document.getElementById('totalPagu').textContent = formatRupiah(totalPagu);
+                    document.getElementById('totalTerbayarkan').textContent = formatRupiah(totalTerbayarkan);
+                    document.getElementById('totalProses').textContent = formatRupiah(totalProses);
+                    document.getElementById('sisaAnggaran').textContent = formatRupiah(sisaAnggaran);
+                });
             });
         }
 
