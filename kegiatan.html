@@ -50,6 +50,7 @@
         .btn-primary { background-color: var(--accent-color); color: white; }
         .btn-danger { background-color: var(--danger); color: white; }
         .komponen-container { margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 24px; }
+        
         .komponen-item {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
@@ -63,16 +64,17 @@
         .komponen-item .rekening-pilihan { grid-column: 1 / 7; }
         .komponen-item .komponen-pilihan { grid-column: 7 / 13; }
         .komponen-item .komponen-volume { grid-column: 1 / 3; }
-        .komponen-item .harga-satuan-info {
-            grid-column: 3 / 8;
-            font-size: 0.9rem; color: var(--text-secondary); padding: 8px; white-space: nowrap;
-        }
-        .komponen-item .subtotal-info {
-            grid-column: 8 / 12;
-            font-size: 0.9rem; font-weight: 600; text-align: right; padding: 8px;
-        }
+        .komponen-item .harga-satuan-info { grid-column: 3 / 8; font-size: 0.9rem; color: var(--text-secondary); padding: 8px; white-space: nowrap; }
+        .komponen-item .subtotal-info { grid-column: 8 / 12; font-size: 0.9rem; font-weight: 600; text-align: right; padding: 8px; }
         .komponen-item .btn-danger { grid-column: 12 / 13; justify-self: end; padding: 8px; }
         .komponen-item input, .komponen-item select { font-size: 0.9rem; padding: 8px; width: 100%; box-sizing: border-box; border-radius: 6px; }
+        
+        .manual-group { grid-column: 1 / 13; display: flex; align-items: center; gap: 10px; margin-top: -10px; }
+        .manual-group label { font-size: 0.85em; }
+        .manual-group input[type="number"] { flex-grow: 1; }
+        .manual-group input[type="text"] { max-width: 150px; }
+        .komponen-item input[disabled], .komponen-item select[disabled] { background-color: #F9FAFB; cursor: not-allowed; }
+
         .total-container { margin-top: 24px; text-align: right; font-size: 1.25rem; font-weight: 700; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); word-wrap: break-word; }
@@ -88,16 +90,7 @@
         .modal-content { background-color: #fff; padding: 32px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; }
         .close-btn { position: absolute; top: 16px; right: 16px; font-size: 24px; color: #9CA3AF; cursor: pointer; }
         .status-group { display: flex; flex-wrap: wrap; gap: 5px; }
-        .status-group label {
-            display: inline-flex;
-            align-items: center;
-            cursor: pointer;
-            padding: 5px 10px;
-            border-radius: 15px;
-            border: 1px solid var(--border-color);
-            transition: all 0.2s;
-            font-size: 0.8rem;
-        }
+        .status-group label { display: inline-flex; align-items: center; cursor: pointer; padding: 5px 10px; border-radius: 15px; border: 1px solid var(--border-color); transition: all 0.2s; font-size: 0.8rem; }
         .status-group input[type="radio"] { display: none; }
         .status-group input[type="radio"]:checked + span { font-weight: 600; }
         .status-group label:has(input[value="Proses Pembuatan TNT"]:checked) { background-color: var(--warning); color: #fff; border-color: var(--warning); }
@@ -106,13 +99,9 @@
     </style>
 </head>
 <body>
-    <aside class="sidebar">
-        </aside>
-
+    <aside class="sidebar"></aside>
     <div class="main-content">
-        <header class="header">
-            </header>
-
+        <header class="header"></header>
         <div class="card">
             <h2 id="formTitle">Input Realisasi Kegiatan</h2>
             <form id="kegiatanForm">
@@ -133,26 +122,15 @@
                 </div>
             </form>
         </div>
-        
         <div class="card">
             <h2>Daftar Kegiatan</h2>
             <table>
-                <thead>
-                    <tr>
-                        <th style="width: 10%;">Tanggal</th>
-                        <th style="width: 25%;">Sub Kegiatan</th>
-                        <th style="width: 25%;">Nama Kegiatan</th>
-                        <th style="width: 20%;">Status</th>
-                        <th class="amount" style="width: 10%;">Jumlah</th>
-                        <th class="action-buttons" style="width: 10%;">Aksi</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Tanggal</th><th>Sub Kegiatan</th><th>Nama Kegiatan</th><th>Status</th><th class="amount">Jumlah</th><th class="action-buttons">Aksi</th></tr></thead>
                 <tbody id="kegiatanTableBody"></tbody>
             </table>
         </div>
     </div>
-    <div id="namaKegiatanModal" class="modal">
-        </div>
+    <div id="namaKegiatanModal" class="modal"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
@@ -270,7 +248,7 @@
              selectElement.value = selectedValue;
         }
 
-        document.addEventListener('change', (e) => {
+        const eventHandler = (e) => {
             if (e.target.id === 'subKegiatan') {
                 const selectedKode = e.target.value;
                 document.querySelectorAll('.rekening-pilihan').forEach(el => populateRekeningDropdown(el));
@@ -296,16 +274,53 @@
             }
             if (e.target.classList.contains('komponen-volume')) { updateTotal(); }
             if (e.target.name && e.target.name.startsWith('status_')) {
-                const docId = e.target.name.split('_')[1];
-                const newStatus = e.target.value;
-                updateStatus(docId, newStatus);
+                updateStatus(e.target.name.split('_')[1], e.target.value);
+            }
+            if (e.target.classList.contains('manual-check')) {
+                const itemRow = e.target.closest('.komponen-item');
+                const komponenSelect = itemRow.querySelector('.komponen-pilihan');
+                const manualHargaInput = itemRow.querySelector('.manual-harga');
+                const manualSatuanInput = itemRow.querySelector('.manual-satuan');
+                if (e.target.checked) {
+                    komponenSelect.disabled = true;
+                    manualHargaInput.disabled = false;
+                    manualSatuanInput.disabled = false;
+                    itemRow.querySelector('.harga-satuan-info').style.display = 'none';
+                } else {
+                    komponenSelect.disabled = false;
+                    manualHargaInput.disabled = true;
+                    manualSatuanInput.disabled = true;
+                    itemRow.querySelector('.harga-satuan-info').style.display = 'block';
+                    komponenSelect.dispatchEvent(new Event('change')); // Re-trigger auto-fill
+                }
+                updateTotal();
+            }
+        };
+
+        document.addEventListener('change', eventHandler);
+        document.addEventListener('input', (e) => {
+            if (e.target.classList.contains('manual-harga') || e.target.classList.contains('komponen-volume')) {
+                updateTotal();
             }
         });
         
         function createKomponenItem(data = {}) {
             const newItem = document.createElement('div');
             newItem.className = 'komponen-item';
-            newItem.innerHTML = `<select class="rekening-pilihan" required><option value="">Pilih Rekening</option></select><select class="komponen-pilihan" required><option value="">Pilih Rekening Dulu</option></select><input type="number" class="komponen-volume" placeholder="Volume" min="1" required value="${data.volume || ''}"><div class="harga-satuan-info">@ Rp 0</div><div class="subtotal-info">Rp 0</div><button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); updateTotal()">X</button>`;
+            newItem.innerHTML = `
+                <select class="rekening-pilihan" required><option value="">Pilih Rekening</option></select>
+                <select class="komponen-pilihan" required><option value="">Pilih Rekening Dulu</option></select>
+                <input type="number" class="komponen-volume" placeholder="Volume" min="1" required value="${data.volume || ''}">
+                <div class="harga-satuan-info">@ Rp 0</div>
+                <div class="subtotal-info">Rp 0</div>
+                <button type="button" class="btn-danger" onclick="this.parentElement.remove(); updateTotal()">X</button>
+                <div class="manual-group">
+                    <input type="checkbox" class="manual-check">
+                    <label>Manual</label>
+                    <input type="number" class="manual-harga" placeholder="Harga Manual (Rp)" disabled value="${data.isManual ? data.harga : ''}">
+                    <input type="text" class="manual-satuan" placeholder="Satuan Manual" disabled value="${data.isManual ? data.satuan : ''}">
+                </div>
+            `;
             komponenList.appendChild(newItem);
             const rekeningSelect = newItem.querySelector('.rekening-pilihan');
             const komponenSelect = newItem.querySelector('.komponen-pilihan');
@@ -314,9 +329,17 @@
                 const anggaran = dataAnggaran.find(a => a.id === data.docAnggaranId);
                 if(anggaran) populateKomponenDropdown(komponenSelect, data.docAnggaranId, data.nama);
                 const itemRow = newItem;
-                itemRow.querySelector('.harga-satuan-info').textContent = `@ ${formatRupiah(data.harga || 0)} / ${data.satuan || ''}`;
-                itemRow.dataset.harga = data.harga || 0;
-                itemRow.dataset.satuan = data.satuan || '';
+                if(!data.isManual){
+                    itemRow.querySelector('.harga-satuan-info').textContent = `@ ${formatRupiah(data.harga || 0)} / ${data.satuan || ''}`;
+                    itemRow.dataset.harga = data.harga || 0;
+                    itemRow.dataset.satuan = data.satuan || '';
+                } else {
+                    itemRow.querySelector('.manual-check').checked = true;
+                    itemRow.querySelector('.komponen-pilihan').disabled = true;
+                    itemRow.querySelector('.manual-harga').disabled = false;
+                    itemRow.querySelector('.manual-satuan').disabled = false;
+                    itemRow.querySelector('.harga-satuan-info').style.display = 'none';
+                }
             }
         }
 
@@ -326,8 +349,14 @@
         window.updateTotal = function() {
             let grandTotal = 0;
             document.querySelectorAll('.komponen-item').forEach(item => {
-                const harga = parseFloat(item.dataset.harga) || 0;
+                const isManual = item.querySelector('.manual-check').checked;
+                let harga = 0;
                 const volume = parseFloat(item.querySelector('.komponen-volume').value) || 0;
+                if(isManual){
+                    harga = parseFloat(item.querySelector('.manual-harga').value) || 0;
+                } else {
+                    harga = parseFloat(item.dataset.harga) || 0;
+                }
                 const subtotal = harga * volume;
                 item.querySelector('.subtotal-info').textContent = formatRupiah(subtotal);
                 grandTotal += subtotal;
@@ -344,14 +373,24 @@
                 if (!docAnggaranId) return;
                 const anggaran = dataAnggaran.find(a => a.id === docAnggaranId);
                 const sisa = (anggaran.paguAnggaran || 0) - (realisasi[docAnggaranId] || 0);
-                const harga = parseFloat(item.dataset.harga) || 0;
+                const isManual = item.querySelector('.manual-check').checked;
+                let harga, satuan, namaKomponen;
+                if(isManual){
+                    harga = parseFloat(item.querySelector('.manual-harga').value) || 0;
+                    satuan = item.querySelector('.manual-satuan').value;
+                    namaKomponen = `(Manual) ${satuan}`;
+                } else {
+                    harga = parseFloat(item.dataset.harga) || 0;
+                    satuan = item.dataset.satuan;
+                    namaKomponen = item.querySelector('.komponen-pilihan').value;
+                }
                 const volume = parseFloat(item.querySelector('.komponen-volume').value) || 0;
                 const subtotal = harga * volume;
                 if(subtotal > sisa) paguTerlampaui = true;
                 totalPengajuan += subtotal;
                 rincianKomponen.push({
-                    docAnggaranId, kodeRekening: anggaran.kodeRekening, nama: item.querySelector('.komponen-pilihan').value,
-                    volume, satuan: item.dataset.satuan, harga, subtotal
+                    docAnggaranId, kodeRekening: anggaran.kodeRekening, nama: namaKomponen,
+                    volume, satuan, harga, subtotal, isManual
                 });
             });
             if(paguTerlampaui) {
