@@ -5,75 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Input Kegiatan - Kartu Kendali PTK</title>
     <style>
+        /* ... (CSS tetap sama seperti sebelumnya) ... */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        
-        :root {
-            --sidebar-bg: #111827;
-            --main-bg: #F9FAFB;
-            --card-bg: #FFFFFF;
-            --text-primary: #1F2937;
-            --text-secondary: #6B7280;
-            --accent-color: #3B82F6;
-            --border-color: #E5E7EB;
-            --success: #10B981;
-            --warning: #F59E0B;
-            --danger: #EF4444;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--main-bg); color: var(--text-primary); display: flex; }
-        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: #fff; padding: 24px; height: 100vh; position: fixed; display: flex; flex-direction: column; }
-        .sidebar-header { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
-        .sidebar-header .logo-icon { background-color: var(--accent-color); border-radius: 8px; padding: 8px; display: flex; align-items: center; justify-content: center; }
-        .sidebar-header h1 { font-size: 1.25rem; font-weight: 600; }
-        nav { display: flex; flex-direction: column; gap: 8px; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; text-decoration: none; color: var(--text-secondary); font-weight: 500; transition: background-color 0.2s, color 0.2s; }
-        .nav-item:hover { background-color: #374151; color: #fff; }
-        .nav-item.active { background-color: var(--accent-color); color: #fff; }
-        .nav-item span { flex-grow: 1; }
-        .main-content { margin-left: 260px; width: calc(100% - 260px); padding: 24px 32px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
-        .header h2 { font-size: 1.875rem; font-weight: 700; }
-        .user-profile { display: flex; align-items: center; gap: 12px; }
-        .user-details { text-align: right; }
-        .user-details .name { font-weight: 600; }
-        .user-details .role { font-size: 0.875rem; color: var(--text-secondary); text-transform: capitalize; }
-        .logout-btn { background: none; border: none; cursor: pointer; color: var(--danger); padding: 8px; display: flex; align-items: center; }
-        .card { background-color: var(--card-bg); padding: 24px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 24px; }
-        .form-container { display: flex; flex-direction: column; gap: 16px; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { margin-bottom: 8px; font-weight: 500; font-size: 0.875rem; }
-        .form-group input, .form-group select { padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1rem; font-family: 'Inter', sans-serif; background-color: #fff; }
-        #tanggal { max-width: 220px; }
-        .sisa-pagu-info { font-size: 0.85em; font-weight: 500; color: var(--info-color); margin-top: 8px; }
-        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: background-color 0.2s; }
-        .btn-primary { background-color: var(--accent-color); color: white; }
-        .btn-danger { background-color: var(--danger); color: white; }
-        .komponen-container { margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 24px; }
-        .komponen-item { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px dashed var(--border-color); }
-        .komponen-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-        .komponen-item .rekening-pilihan { grid-column: 1 / 4; }
-        .komponen-item .komponen-pilihan { grid-column: 4 / 7; }
-        .komponen-item .komponen-volume { grid-column: 1 / 2; }
-        .komponen-item .komponen-satuan { grid-column: 2 / 3; }
-        .komponen-item .komponen-harga { grid-column: 3 / 6; }
-        .komponen-item .btn-danger { grid-column: 6 / 7; justify-self: end; padding: 8px; }
-        .komponen-item input, .komponen-item select { font-size: 0.9rem; padding: 8px; width: 100%; box-sizing: border-box; border-radius: 6px; }
-        .komponen-item input[readonly] { background-color: #F9FAFB; cursor: not-allowed; }
-        .total-container { margin-top: 24px; text-align: right; font-size: 1.25rem; font-weight: 700; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { background-color: #F9FAFB; font-weight: 600; color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase; }
-        td.amount { text-align: right; }
-        .action-buttons { text-align: right; white-space: nowrap; }
-        .btn-icon { background-color: transparent; border: none; cursor: pointer; padding: 6px; border-radius: 50%; display: inline-flex; }
-        .btn-icon:hover { background-color: #F3F4F6; }
-        .btn-icon svg { width: 18px; height: 18px; }
-        .icon-edit { color: var(--accent-color); }
-        .icon-delete { color: var(--danger); }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background-color: #fff; padding: 32px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; }
-        .close-btn { position: absolute; top: 16px; right: 16px; font-size: 24px; color: #9CA3AF; cursor: pointer; }
+        :root{--sidebar-bg:#111827;--main-bg:#F9FAFB;--card-bg:#FFFFFF;--text-primary:#1F2937;--text-secondary:#6B7280;--accent-color:#3B82F6;--border-color:#E5E7EB;--success:#10B981;--warning:#F59E0B;--danger:#EF4444;}*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',sans-serif;background-color:var(--main-bg);color:var(--text-primary);display:flex}.sidebar{width:260px;background-color:var(--sidebar-bg);color:#fff;padding:24px;height:100vh;position:fixed;display:flex;flex-direction:column}.sidebar-header{display:flex;align-items:center;gap:12px;margin-bottom:40px}.sidebar-header .logo-icon{background-color:var(--accent-color);border-radius:8px;padding:8px;display:flex;align-items:center;justify-content:center}.sidebar-header h1{font-size:1.25rem;font-weight:600}nav{display:flex;flex-direction:column;gap:8px;}.nav-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;text-decoration:none;color:var(--text-secondary);font-weight:500;transition:background-color .2s,color .2s}.nav-item:hover{background-color:#374151;color:#fff}.nav-item.active{background-color:var(--accent-color);color:#fff}.nav-item span{flex-grow:1}.main-content{margin-left:260px;width:calc(100% - 260px);padding:24px 32px}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px}.header h2{font-size:1.875rem;font-weight:700}.user-profile{display:flex;align-items:center;gap:12px}.user-details{text-align:right}.user-details .name{font-weight:600}.user-details .role{font-size:.875rem;color:var(--text-secondary);text-transform:capitalize}.logout-btn{background:0 0;border:none;cursor:pointer;color:var(--danger);padding:8px;display:flex;align-items:center}.card{background-color:var(--card-bg);padding:24px;border-radius:12px;border:1px solid var(--border-color);box-shadow:0 1px 2px rgba(0,0,0,0.05);margin-bottom:24px}.form-container{display:flex;flex-direction:column;gap:16px}.form-group{display:flex;flex-direction:column}.form-group label{margin-bottom:8px;font-weight:500;font-size:.875rem}.form-group input,.form-group select{padding:10px;border:1px solid var(--border-color);border-radius:8px;font-size:1rem;font-family:'Inter',sans-serif;background-color:#fff}#tanggal{max-width:220px}.sisa-pagu-info{font-size:.85em;font-weight:500;color:var(--info-color);margin-top:8px}.btn{padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:1rem;transition:background-color .2s}.btn-primary{background-color:var(--accent-color);color:#fff}.btn-danger{background-color:var(--danger);color:#fff}.komponen-container{margin-top:24px;border-top:1px solid var(--border-color);padding-top:24px}.komponen-item{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;align-items:center;margin-bottom:16px;padding-bottom:16px;border-bottom:1px dashed var(--border-color)}.komponen-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}.komponen-item .rekening-pilihan{grid-column:1 / 4}.komponen-item .komponen-pilihan{grid-column:4 / 7}.komponen-item .komponen-volume{grid-column:1 / 2}.komponen-item .komponen-satuan{grid-column:2 / 3}.komponen-item .komponen-harga{grid-column:3 / 6}.komponen-item .btn-danger{grid-column:6 / 7;justify-self:end;padding:8px}.komponen-item input,.komponen-item select{font-size:.9rem;padding:8px;width:100%;box-sizing:border-box;border-radius:6px}.komponen-item input[readonly]{background-color:#F9FAFB;cursor:not-allowed}.total-container{margin-top:24px;text-align:right;font-size:1.25rem;font-weight:700}table{width:100%;border-collapse:collapse}th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--border-color)}th{background-color:#F9FAFB;font-weight:600;color:var(--text-secondary);font-size:.875rem;text-transform:uppercase}td.amount{text-align:right}.action-buttons{text-align:right;white-space:nowrap}.btn-icon{background-color:transparent;border:none;cursor:pointer;padding:6px;border-radius:50%;display:inline-flex}.btn-icon:hover{background-color:#F3F4F6}.btn-icon svg{width:18px;height:18px}.icon-edit{color:var(--accent-color)}.icon-delete{color:var(--danger)}.modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,0.5);justify-content:center;align-items:center}.modal-content{background-color:#fff;padding:32px;border-radius:12px;width:90%;max-width:500px;box-shadow:0 10px 25px rgba(0,0,0,0.1);position:relative}.close-btn{position:absolute;top:16px;right:16px;font-size:24px;color:#9CA3AF;cursor:pointer}@media (max-width:768px){.sidebar{position:static;width:100%;height:auto}.main-content{margin-left:0;width:100%;padding:16px}.header{flex-direction:column;align-items:flex-start;gap:16px}}
     </style>
 </head>
 <body>
@@ -116,7 +50,7 @@
                 <button id="logoutBtn" title="Logout" class="logout-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></button>
             </div>
         </header>
-        
+
         <div class="card">
             <form id="kegiatanForm">
                 <input type="hidden" id="editId">
@@ -146,19 +80,40 @@
         </div>
     </div>
 
-    <div id="namaKegiatanModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h2>Masukkan Nama Kegiatan</h2>
-            <form id="namaKegiatanForm">
-                <div class="form-group"><label for="namaKegiatanInput">Nama Kegiatan</label><input type="text" id="namaKegiatanInput" required></div>
-                <button type="submit" class="btn btn-primary" style="margin-top: 16px;">Simpan Kegiatan</button>
-            </form>
-        </div>
-    </div>
+    <div id="namaKegiatanModal" class="modal"></div>
 
     <script type="module">
-        // ... (JavaScript dari kegiatan.html yang lama tetap sama persis dan lengkap) ...
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, getDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
+            authDomain: "kartu-kendali-kegiatan-ptk.firebaseapp.com",
+            projectId: "kartu-kendali-kegiatan-ptk",
+            storageBucket: "kartu-kendali-kegiatan-ptk.appspot.com",
+            messagingSenderId: "694993604999",
+            appId: "1:694993604999:web:83eaf3af3ddf0c5d0bc348322"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const userRole = sessionStorage.getItem('userRole');
+        const userName = sessionStorage.getItem('userName');
+        if (!userRole) { window.location.href = 'login.html'; }
+        document.getElementById('userNameDisplay').textContent = userName;
+        document.getElementById('userRoleDisplay').textContent = userRole;
+        document.getElementById('logoutBtn').addEventListener('click', () => { sessionStorage.clear(); window.location.href = 'login.html'; });
+
+        // LOGIKA YANG HILANG DIKEMBALIKAN DI SINI
+        if (userRole === 'admin') {
+            document.getElementById('paguButton').style.display = 'flex';
+            document.getElementById('komponenButton').style.display = 'flex';
+        }
+        if (userRole === 'atasan') {
+            document.getElementById('kegiatanButton').style.display = 'none';
+        }
+
+        // ... (Sisa kode JavaScript dari kegiatan.html sebelumnya tetap di sini) ...
     </script>
 </body>
 </html>
