@@ -54,6 +54,7 @@
         .manual-group label { font-size: 0.85em; margin-bottom: 0; }
         .manual-group input[type="number"] { flex-grow: 1; }
         .total-container { margin-top: 24px; text-align: right; font-size: 1.25rem; font-weight: 700; }
+        
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); word-wrap: break-word; }
         th { background-color: #F9FAFB; font-weight: 600; color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase; }
@@ -87,9 +88,9 @@
 </head>
 <body>
     <aside class="sidebar"></aside>
-
     <div class="main-content">
         <header class="header"></header>
+
         <div class="card">
             <h2 id="formTitle">Input Realisasi Kegiatan</h2>
             <form id="kegiatanForm">
@@ -103,10 +104,10 @@
                     <table style="margin-top: 16px;">
                         <thead>
                             <tr>
-                                <th>Rekening</th>
+                                <th style="width: 35%;">Rekening</th>
                                 <th>Komponen</th>
-                                <th class="amount">Subtotal</th>
-                                <th class="action-buttons">Aksi</th>
+                                <th class="amount" style="width: 20%;">Subtotal</th>
+                                <th class="action-buttons" style="width: 10%;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="rincianTableBody">
@@ -122,14 +123,18 @@
                 </div>
             </form>
         </div>
+        
         <div class="card">
             <h2>Daftar Kegiatan</h2>
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 10%;">Tanggal</th><th style="width: 25%;">Sub Kegiatan</th>
-                        <th style="width: 25%;">Nama Kegiatan</th><th style="width: 20%;">Status</th>
-                        <th class="amount" style="width: 10%;">Jumlah</th><th class="action-buttons" style="width: 10%;">Aksi</th>
+                        <th style="width: 10%;">Tanggal</th>
+                        <th style="width: 25%;">Sub Kegiatan</th>
+                        <th style="width: 25%;">Nama Kegiatan</th>
+                        <th style="width: 20%;">Status</th>
+                        <th class="amount" style="width: 10%;">Jumlah</th>
+                        <th class="action-buttons" style="width: 10%;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="kegiatanTableBody"></tbody>
@@ -318,7 +323,7 @@
             let rincianItem;
             if (isManual) {
                 const subtotal = Number(document.getElementById('manualHarga').value);
-                rincianItem = { docAnggaranId, kodeRekening: anggaran.kodeRekening, nama: `(Manual) ${anggaran.uraian}`, volume: 1, satuan: 'ls', harga: subtotal, subtotal, isManual: true };
+                rincianItem = { docAnggaranId, kodeRekening: anggaran.kodeRekening, nama: `(Manual) - ${anggaran.uraian}`, volume: 1, satuan: 'ls', harga: subtotal, subtotal, isManual: true };
             } else {
                 const komponenSelect = document.getElementById('komponenPilihan');
                 const selectedOption = komponenSelect.options[komponenSelect.selectedIndex];
@@ -365,19 +370,16 @@
                 alert('Silakan tambahkan minimal satu rincian komponen.');
                 return;
             }
-            
             let paguTerlampaui = false;
             rincianList.forEach(item => {
                 const anggaran = dataAnggaran.find(a => a.id === item.docAnggaranId);
                 const sisa = (anggaran.paguAnggaran || 0) - (realisasi[item.docAnggaranId] || 0);
                 if(item.subtotal > sisa) paguTerlampaui = true;
             });
-
             if(paguTerlampaui) {
                 alert('Gagal! Total pengajuan untuk salah satu kode rekening melebihi sisa pagu yang tersedia.');
                 return;
             }
-
             temporaryData = {
                 tanggal: document.getElementById('tanggal').value,
                 kodeSubKegiatan: subKegiatanSelect.value,
@@ -476,7 +478,8 @@
         });
 
         closeBtn.onclick = () => namaKegiatanModal.style.display = 'none';
-        window.onclick = (event) => { if (event.target == namaKegiatanModal) { namaKegiatanModal.style.display = 'none'; } };
+        window.onclick = (event) => { if (event.target == namaKegiatanModal || event.target == komponenModal) { namaKegiatanModal.style.display = 'none'; komponenModal.style.display = 'none'; } };
+
     </script>
 </body>
 </html>
