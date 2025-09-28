@@ -51,7 +51,7 @@
         .btn-danger { background-color: var(--danger); color: white; }
         #uploadLabel { cursor: pointer; }
         #uploadFile { display: none; }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
         .modal-content { background-color: #fff; padding: 32px; border-radius: 12px; width: 90%; max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; }
         .close-btn { position: absolute; top: 16px; right: 16px; font-size: 24px; color: #9CA3AF; cursor: pointer; }
         .form-grid { display: flex; flex-direction: column; gap: 16px; }
@@ -80,43 +80,11 @@
 <body>
 
     <aside class="sidebar">
-        <div>
-            <div class="sidebar-header">
-                <div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 10H2V12H14V10ZM14 6H2V8H14V6ZM2 16H10V14H2V16ZM21.5 11.5L23 13L16 20L11.5 15.5L13 14L16 17L21.5 11.5Z" fill="white"/></svg></div>
-                <h1>SI-KENDALI</h1>
-            </div>
-            <nav>
-                <a href="index.html" class="nav-item">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" fill="currentColor"/></svg>
-                    <span>Dashboard</span>
-                </a>
-                <a href="kegiatan.html" id="kegiatanButton" class="nav-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                    <span>Input Kegiatan</span>
-                </a>
-                <a href="pagu.html" id="paguButton" class="nav-item active">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                    <span>Kelola Pagu</span>
-                </a>
-                <a href="komponen.html" id="komponenButton" class="nav-item">
-                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                    <span>Kelola Komponen</span>
-                </a>
-            </nav>
-        </div>
-    </aside>
+        </aside>
 
     <div class="main-content">
         <header class="header">
-            <div>
-                <h2>Manajemen Pagu Anggaran</h2>
-                <p style="color: var(--text-secondary);">Kelola semua data pagu anggaran kegiatan.</p>
-            </div>
-            <div class="user-profile">
-                <div class="user-details"><span class="name" id="userNameDisplay"></span><span class="role" id="userRoleDisplay"></span></div>
-                <button id="logoutBtn" title="Logout" class="logout-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></button>
-            </div>
-        </header>
+            </header>
 
         <div class="card">
             <div class="card-header">
@@ -177,6 +145,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
+        // Setup Sidebar & Header
+        const sidebarContainer = document.querySelector('.sidebar');
+        sidebarContainer.innerHTML = `<div><div class="sidebar-header"><div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 10H2V12H14V10ZM14 6H2V8H14V6ZM2 16H10V14H2V16ZM21.5 11.5L23 13L16 20L11.5 15.5L13 14L16 17L21.5 11.5Z" fill="white"/></svg></div><h1>SI-KENDALI</h1></div><nav><a href="index.html" class="nav-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" fill="currentColor"/></svg><span>Dashboard</span></a><a href="kegiatan.html" id="kegiatanButton" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg><span>Input Kegiatan</span></a><a href="pagu.html" id="paguButton" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg><span>Kelola Pagu</span></a><a href="komponen.html" id="komponenButton" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg><span>Kelola Komponen</span></a></nav></div>`;
+        const headerContainer = document.querySelector('.header');
+        headerContainer.innerHTML = `<div><h2>Manajemen Pagu Anggaran</h2><p style="color: var(--text-secondary);">Kelola semua data pagu anggaran kegiatan.</p></div><div class="user-profile"><div class="user-details"><span class="name" id="userNameDisplay"></span><span class="role" id="userRoleDisplay"></span></div><button id="logoutBtn" title="Logout" class="logout-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></button></div>`;
+        
         const userRole = sessionStorage.getItem('userRole');
         const userName = sessionStorage.getItem('userName');
         if (userRole !== 'admin') { window.location.href = 'index.html'; }
@@ -184,7 +158,6 @@
         document.getElementById('userRoleDisplay').textContent = userRole;
         document.getElementById('logoutBtn').addEventListener('click', () => { sessionStorage.clear(); window.location.href = 'login.html'; });
 
-        // Tampilkan tombol navigasi yang sesuai
         if (userRole === 'admin') {
             document.getElementById('paguButton').style.display = 'flex';
             document.getElementById('komponenButton').style.display = 'flex';
@@ -192,8 +165,7 @@
         if (userRole === 'atasan') {
             document.getElementById('kegiatanButton').style.display = 'none';
         }
-        
-        // ... (Sisa kode JavaScript dari pagu.html sebelumnya diletakkan di sini, tidak ada perubahan logika) ...
+
         const paguTableBody = document.getElementById('paguTableBody');
         const paguModal = document.getElementById('paguModal');
         const paguForm = document.getElementById('paguForm');
@@ -201,6 +173,10 @@
         const editIdInput = document.getElementById('editId');
         const addPaguBtn = document.getElementById('addPaguBtn');
         const closeBtn = document.querySelector('.close-btn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const uploadFile = document.getElementById('uploadFile');
+        const clearDataBtn = document.getElementById('clearDataBtn');
+        
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 
         addPaguBtn.onclick = () => {
@@ -303,8 +279,85 @@
                     paguModal.style.display = 'flex';
                 }
             }
-            if (button.dataset.deleteItem) { /* ... */ }
-            if (button.dataset.deleteGroup) { /* ... */ }
+            if (button.dataset.deleteItem) { 
+                if(confirm('Yakin ingin menghapus item pagu ini?')){ await deleteDoc(doc(db, "anggaran", button.dataset.deleteItem)); }
+            }
+            if (button.dataset.deleteGroup) { 
+                if(confirm(`PERINGATAN: Ini akan menghapus Sub Kegiatan dan SEMUA rincian pagu di dalamnya. Lanjutkan?`)){
+                    const q = query(collection(db, "anggaran"), where("kodeSubKegiatan", "==", button.dataset.deleteGroup));
+                    const snapshot = await getDocs(q);
+                    const batch = writeBatch(db);
+                    snapshot.docs.forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+                }
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const templateData = [{
+                kodeSubKegiatan: "1.01.01.2.02",
+                namaSubKegiatan: "Pengembangan Karir Pendidik",
+                kodeRekening: "1.01.01.2.02.0001",
+                uraian: "Belanja ATK",
+                paguAnggaran: 5000000
+            }];
+            const ws = XLSX.utils.json_to_sheet(templateData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Template Pagu");
+            XLSX.writeFile(wb, "template_pagu_lengkap.xlsx");
+        });
+
+        uploadFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const data = event.target.result;
+                    const workbook = XLSX.read(data, { type: 'buffer' });
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+                    if (confirm(`Ditemukan ${jsonData.length} baris data. Unggah semua?`)) {
+                        const batch = writeBatch(db);
+                        jsonData.forEach(item => {
+                            if (item.kodeSubKegiatan && item.namaSubKegiatan && item.kodeRekening && item.uraian && item.paguAnggaran) {
+                                const docRef = doc(collection(db, "anggaran"));
+                                batch.set(docRef, {
+                                    kodeSubKegiatan: String(item.kodeSubKegiatan),
+                                    namaSubKegiatan: String(item.namaSubKegiatan),
+                                    kodeRekening: String(item.kodeRekening),
+                                    uraian: String(item.uraian),
+                                    paguAnggaran: Number(item.paguAnggaran)
+                                });
+                            }
+                        });
+                        await batch.commit();
+                        alert(`${jsonData.length} data berhasil diunggah.`);
+                    }
+                } catch (error) {
+                    alert("Gagal memproses file. Pastikan format kolom sesuai template.");
+                } finally {
+                    uploadFile.value = '';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        clearDataBtn.addEventListener('click', async () => {
+            if (confirm('PERINGATAN: Anda akan menghapus SEMUA data pagu. Aksi ini tidak dapat dibatalkan. Lanjutkan?')) {
+                try {
+                    const snapshot = await getDocs(collection(db, "anggaran"));
+                    const batch = writeBatch(db);
+                    snapshot.docs.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                    alert('Semua data pagu berhasil dihapus.');
+                } catch (error) {
+                    alert('Gagal membersihkan data.');
+                    console.error(error);
+                }
+            }
         });
     </script>
 </body>
