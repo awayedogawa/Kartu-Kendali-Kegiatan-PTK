@@ -50,7 +50,6 @@
         .btn-primary { background-color: var(--accent-color); color: white; }
         .btn-danger { background-color: var(--danger); color: white; }
         .komponen-container { margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 24px; }
-        
         .komponen-item {
             display: grid;
             grid-template-columns: repeat(10, 1fr);
@@ -73,7 +72,6 @@
         }
         .komponen-item .btn-danger { grid-column: 10 / 11; justify-self: end; padding: 8px; }
         .komponen-item input, .komponen-item select { font-size: 0.9rem; padding: 8px; width: 100%; box-sizing: border-box; border-radius: 6px; }
-        
         .total-container { margin-top: 24px; text-align: right; font-size: 1.25rem; font-weight: 700; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
@@ -91,7 +89,6 @@
     </style>
 </head>
 <body>
-
     <aside class="sidebar">
         </aside>
 
@@ -128,17 +125,7 @@
             </table>
         </div>
     </div>
-
-    <div id="namaKegiatanModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h2>Masukkan Nama Kegiatan</h2>
-            <form id="namaKegiatanForm">
-                <div class="form-group"><label for="namaKegiatanInput">Nama Kegiatan</label><input type="text" id="namaKegiatanInput" required></div>
-                <button type="submit" class="btn btn-primary" style="margin-top: 16px;">Simpan Kegiatan</button>
-            </form>
-        </div>
-    </div>
+    <div id="namaKegiatanModal" class="modal"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
@@ -160,6 +147,8 @@
         sidebarContainer.innerHTML = `<div><div class="sidebar-header"><div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 10H2V12H14V10ZM14 6H2V8H14V6ZM2 16H10V14H2V16ZM21.5 11.5L23 13L16 20L11.5 15.5L13 14L16 17L21.5 11.5Z" fill="white"/></svg></div><h1>SI-KENDALI</h1></div><nav><a href="index.html" class="nav-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" fill="currentColor"/></svg><span>Dashboard</span></a><a href="kegiatan.html" id="kegiatanButton" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg><span>Input Kegiatan</span></a><a href="pagu.html" id="paguButton" class="nav-item" style="display:none;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg><span>Kelola Pagu</span></a><a href="komponen.html" id="komponenButton" class="nav-item" style="display:none;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg><span>Kelola Komponen</span></a></nav></div>`;
         const headerContainer = document.querySelector('.header');
         headerContainer.innerHTML = `<div><h2 id="formTitle">Input Realisasi Kegiatan</h2><p style="color: var(--text-secondary);">Isi formulir di bawah untuk mencatat penggunaan anggaran.</p></div><div class="user-profile"><div class="user-details"><span class="name" id="userNameDisplay"></span><span class="role" id="userRoleDisplay"></span></div><button id="logoutBtn" title="Logout" class="logout-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></button></div>`;
+        const namaKegiatanModalContainer = document.getElementById('namaKegiatanModal');
+        namaKegiatanModalContainer.innerHTML = `<div class="modal-content"><span class="close-btn">&times;</span><h2>Masukkan Nama Kegiatan</h2><form id="namaKegiatanForm"><div class="form-group"><label for="namaKegiatanInput">Nama Kegiatan</label><input type="text" id="namaKegiatanInput" required></div><button type="submit" class="btn btn-primary" style="margin-top: 16px;">Simpan Kegiatan</button></form></div>`;
         
         const userRole = sessionStorage.getItem('userRole');
         const userName = sessionStorage.getItem('userName');
@@ -377,7 +366,7 @@
                 const data = doc.data(); const docId = doc.id; const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${data.tanggal}</td>
-                    <td>${data.namaSubKegiatan}</td>
+                    <td>${data.kodeSubKegiatan} - ${data.namaSubKegiatan}</td>
                     <td>${data.namaKegiatan}</td>
                     <td class="amount">${formatRupiah(data.jumlah)}</td>
                     <td class="action-buttons">
