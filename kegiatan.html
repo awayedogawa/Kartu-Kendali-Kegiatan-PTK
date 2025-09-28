@@ -64,15 +64,20 @@
         .komponen-item .rekening-pilihan { grid-column: 1 / 7; }
         .komponen-item .komponen-pilihan { grid-column: 7 / 13; }
         .komponen-item .komponen-volume { grid-column: 1 / 3; }
-        .komponen-item .harga-satuan-info { grid-column: 3 / 8; font-size: 0.9rem; color: var(--text-secondary); padding: 8px; white-space: nowrap; }
-        .komponen-item .subtotal-info { grid-column: 8 / 12; font-size: 0.9rem; font-weight: 600; text-align: right; padding: 8px; }
+        .komponen-item .harga-satuan-info {
+            grid-column: 3 / 8;
+            font-size: 0.9rem; color: var(--text-secondary); padding: 8px; white-space: nowrap;
+        }
+        .komponen-item .subtotal-info {
+            grid-column: 8 / 12;
+            font-size: 0.9rem; font-weight: 600; text-align: right; padding: 8px;
+        }
         .komponen-item .btn-danger { grid-column: 12 / 13; justify-self: end; padding: 8px; }
         .komponen-item input, .komponen-item select { font-size: 0.9rem; padding: 8px; width: 100%; box-sizing: border-box; border-radius: 6px; }
         
         .manual-group { grid-column: 1 / 13; display: flex; align-items: center; gap: 10px; margin-top: -10px; }
         .manual-group label { font-size: 0.85em; }
         .manual-group input[type="number"] { flex-grow: 1; }
-        .manual-group input[type="text"] { max-width: 150px; }
         .komponen-item input[disabled], .komponen-item select[disabled] { background-color: #F9FAFB; cursor: not-allowed; }
 
         .total-container { margin-top: 24px; text-align: right; font-size: 1.25rem; font-weight: 700; }
@@ -90,7 +95,16 @@
         .modal-content { background-color: #fff; padding: 32px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; }
         .close-btn { position: absolute; top: 16px; right: 16px; font-size: 24px; color: #9CA3AF; cursor: pointer; }
         .status-group { display: flex; flex-wrap: wrap; gap: 5px; }
-        .status-group label { display: inline-flex; align-items: center; cursor: pointer; padding: 5px 10px; border-radius: 15px; border: 1px solid var(--border-color); transition: all 0.2s; font-size: 0.8rem; }
+        .status-group label {
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 15px;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s;
+            font-size: 0.8rem;
+        }
         .status-group input[type="radio"] { display: none; }
         .status-group input[type="radio"]:checked + span { font-weight: 600; }
         .status-group label:has(input[value="Proses Pembuatan TNT"]:checked) { background-color: var(--warning); color: #fff; border-color: var(--warning); }
@@ -102,6 +116,7 @@
     <aside class="sidebar"></aside>
     <div class="main-content">
         <header class="header"></header>
+
         <div class="card">
             <h2 id="formTitle">Input Realisasi Kegiatan</h2>
             <form id="kegiatanForm">
@@ -122,6 +137,7 @@
                 </div>
             </form>
         </div>
+        
         <div class="card">
             <h2>Daftar Kegiatan</h2>
             <table>
@@ -272,7 +288,6 @@
                 itemRow.dataset.satuan = selectedOption.dataset.satuan || '';
                 updateTotal();
             }
-            if (e.target.classList.contains('komponen-volume')) { updateTotal(); }
             if (e.target.name && e.target.name.startsWith('status_')) {
                 updateStatus(e.target.name.split('_')[1], e.target.value);
             }
@@ -280,18 +295,18 @@
                 const itemRow = e.target.closest('.komponen-item');
                 const komponenSelect = itemRow.querySelector('.komponen-pilihan');
                 const manualHargaInput = itemRow.querySelector('.manual-harga');
-                const manualSatuanInput = itemRow.querySelector('.manual-satuan');
+                const volumeInput = itemRow.querySelector('.komponen-volume');
                 if (e.target.checked) {
                     komponenSelect.disabled = true;
+                    volumeInput.disabled = true;
                     manualHargaInput.disabled = false;
-                    manualSatuanInput.disabled = false;
                     itemRow.querySelector('.harga-satuan-info').style.display = 'none';
                 } else {
                     komponenSelect.disabled = false;
+                    volumeInput.disabled = false;
                     manualHargaInput.disabled = true;
-                    manualSatuanInput.disabled = true;
                     itemRow.querySelector('.harga-satuan-info').style.display = 'block';
-                    komponenSelect.dispatchEvent(new Event('change')); // Re-trigger auto-fill
+                    komponenSelect.dispatchEvent(new Event('change'));
                 }
                 updateTotal();
             }
@@ -317,8 +332,7 @@
                 <div class="manual-group">
                     <input type="checkbox" class="manual-check">
                     <label>Manual</label>
-                    <input type="number" class="manual-harga" placeholder="Harga Manual (Rp)" disabled value="${data.isManual ? data.harga : ''}">
-                    <input type="text" class="manual-satuan" placeholder="Satuan Manual" disabled value="${data.isManual ? data.satuan : ''}">
+                    <input type="number" class="manual-harga" placeholder="Jumlah Manual (Rp)" disabled value="${data.isManual ? data.subtotal : ''}">
                 </div>
             `;
             komponenList.appendChild(newItem);
@@ -336,8 +350,8 @@
                 } else {
                     itemRow.querySelector('.manual-check').checked = true;
                     itemRow.querySelector('.komponen-pilihan').disabled = true;
+                    itemRow.querySelector('.komponen-volume').disabled = true;
                     itemRow.querySelector('.manual-harga').disabled = false;
-                    itemRow.querySelector('.manual-satuan').disabled = false;
                     itemRow.querySelector('.harga-satuan-info').style.display = 'none';
                 }
             }
@@ -350,14 +364,14 @@
             let grandTotal = 0;
             document.querySelectorAll('.komponen-item').forEach(item => {
                 const isManual = item.querySelector('.manual-check').checked;
-                let harga = 0;
-                const volume = parseFloat(item.querySelector('.komponen-volume').value) || 0;
+                let subtotal = 0;
                 if(isManual){
-                    harga = parseFloat(item.querySelector('.manual-harga').value) || 0;
+                    subtotal = parseFloat(item.querySelector('.manual-harga').value) || 0;
                 } else {
-                    harga = parseFloat(item.dataset.harga) || 0;
+                    const harga = parseFloat(item.dataset.harga) || 0;
+                    const volume = parseFloat(item.querySelector('.komponen-volume').value) || 0;
+                    subtotal = harga * volume;
                 }
-                const subtotal = harga * volume;
                 item.querySelector('.subtotal-info').textContent = formatRupiah(subtotal);
                 grandTotal += subtotal;
             });
@@ -374,18 +388,20 @@
                 const anggaran = dataAnggaran.find(a => a.id === docAnggaranId);
                 const sisa = (anggaran.paguAnggaran || 0) - (realisasi[docAnggaranId] || 0);
                 const isManual = item.querySelector('.manual-check').checked;
-                let harga, satuan, namaKomponen;
+                let harga, satuan, namaKomponen, volume, subtotal;
                 if(isManual){
-                    harga = parseFloat(item.querySelector('.manual-harga').value) || 0;
-                    satuan = item.querySelector('.manual-satuan').value;
-                    namaKomponen = `(Manual) ${satuan}`;
+                    subtotal = parseFloat(item.querySelector('.manual-harga').value) || 0;
+                    namaKomponen = `(Manual)`;
+                    volume = 1;
+                    satuan = 'ls';
+                    harga = subtotal;
                 } else {
                     harga = parseFloat(item.dataset.harga) || 0;
                     satuan = item.dataset.satuan;
                     namaKomponen = item.querySelector('.komponen-pilihan').value;
+                    volume = parseFloat(item.querySelector('.komponen-volume').value) || 0;
+                    subtotal = harga * volume;
                 }
-                const volume = parseFloat(item.querySelector('.komponen-volume').value) || 0;
-                const subtotal = harga * volume;
                 if(subtotal > sisa) paguTerlampaui = true;
                 totalPengajuan += subtotal;
                 rincianKomponen.push({
@@ -400,7 +416,7 @@
             temporaryData = {
                 tanggal: document.getElementById('tanggal').value,
                 kodeSubKegiatan: subKegiatanSelect.value,
-                namaSubKegiatan: subKegiatanSelect.options[subKegiatanSelect.selectedIndex].text.split(' - ')[1],
+                namaSubKegiatan: subKegiatanSelect.options[subKegiatanSelect.selectedIndex].text.split(' - ')[1].trim(),
                 jumlah: totalPengajuan, rincian: rincianKomponen,
                 status: 'Proses Pembuatan TNT', diinputOleh: userName, timestamp: new Date()
             };
