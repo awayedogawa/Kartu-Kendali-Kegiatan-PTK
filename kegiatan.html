@@ -51,7 +51,6 @@
         .btn-danger { background-color: var(--danger); color: white; }
         .komponen-container { margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 24px; }
         
-        /* DIPERBARUI: Tata letak grid komponen yang lebih ringkas */
         .komponen-item {
             display: grid;
             grid-template-columns: repeat(10, 1fr);
@@ -92,10 +91,13 @@
     </style>
 </head>
 <body>
-    <aside class="sidebar"></aside>
+
+    <aside class="sidebar">
+        </aside>
 
     <div class="main-content">
-        <header class="header"></header>
+        <header class="header">
+            </header>
 
         <div class="card">
             <h2 id="formTitle">Input Realisasi Kegiatan</h2>
@@ -118,61 +120,189 @@
             </form>
         </div>
         
-        <div class="card"></div>
+        <div class="card">
+            <h2>Daftar Kegiatan</h2>
+            <table>
+                <thead><tr><th>Tanggal</th><th>Sub Kegiatan</th><th>Nama Kegiatan</th><th class="amount">Jumlah</th><th class="action-buttons">Aksi</th></tr></thead>
+                <tbody id="kegiatanTableBody"></tbody>
+            </table>
+        </div>
     </div>
 
-    <div id="namaKegiatanModal" class="modal"></div>
+    <div id="namaKegiatanModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Masukkan Nama Kegiatan</h2>
+            <form id="namaKegiatanForm">
+                <div class="form-group"><label for="namaKegiatanInput">Nama Kegiatan</label><input type="text" id="namaKegiatanInput" required></div>
+                <button type="submit" class="btn btn-primary" style="margin-top: 16px;">Simpan Kegiatan</button>
+            </form>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, getDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-        // ... (konfigurasi Firebase dan setup UI awal tetap sama)
+        const firebaseConfig = {
+            apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
+            authDomain: "kartu-kendali-kegiatan-ptk.firebaseapp.com",
+            projectId: "kartu-kendali-kegiatan-ptk",
+            storageBucket: "kartu-kendali-kegiatan-ptk.appspot.com",
+            messagingSenderId: "694993604999",
+            appId: "1:694993604999:web:83eaf3af3ddf0c5d0bc348322"
+        };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
-        // ... (logika user, sidebar, dan variabel lain tetap sama)
+        // Setup Sidebar & Header
+        const sidebarContainer = document.querySelector('.sidebar');
+        sidebarContainer.innerHTML = `<div><div class="sidebar-header"><div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 10H2V12H14V10ZM14 6H2V8H14V6ZM2 16H10V14H2V16ZM21.5 11.5L23 13L16 20L11.5 15.5L13 14L16 17L21.5 11.5Z" fill="white"/></svg></div><h1>SI-KENDALI</h1></div><nav><a href="index.html" class="nav-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" fill="currentColor"/></svg><span>Dashboard</span></a><a href="kegiatan.html" id="kegiatanButton" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg><span>Input Kegiatan</span></a><a href="pagu.html" id="paguButton" class="nav-item" style="display:none;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg><span>Kelola Pagu</span></a><a href="komponen.html" id="komponenButton" class="nav-item" style="display:none;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg><span>Kelola Komponen</span></a></nav></div>`;
+        const headerContainer = document.querySelector('.header');
+        headerContainer.innerHTML = `<div><h2 id="formTitle">Input Realisasi Kegiatan</h2><p style="color: var(--text-secondary);">Isi formulir di bawah untuk mencatat penggunaan anggaran.</p></div><div class="user-profile"><div class="user-details"><span class="name" id="userNameDisplay"></span><span class="role" id="userRoleDisplay"></span></div><button id="logoutBtn" title="Logout" class="logout-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></button></div>`;
         
-        // ... (onSnapshot untuk 'anggaran' dan 'transaksi' tetap sama)
+        const userRole = sessionStorage.getItem('userRole');
+        const userName = sessionStorage.getItem('userName');
+        if (!userRole) { window.location.href = 'login.html'; }
+        document.getElementById('userNameDisplay').textContent = userName;
+        document.getElementById('userRoleDisplay').textContent = userRole;
+        document.getElementById('logoutBtn').addEventListener('click', () => { sessionStorage.clear(); window.location.href = 'login.html'; });
+        if (userRole === 'admin') {
+            document.getElementById('paguButton').style.display = 'flex';
+            document.getElementById('komponenButton').style.display = 'flex';
+        }
+        if (userRole === 'atasan') {
+            document.getElementById('kegiatanButton').style.display = 'none';
+        }
 
-        function createKomponenItem(data = {}) {
-            const newItem = document.createElement('div');
-            newItem.className = 'komponen-item';
-            // DIPERBARUI: Struktur HTML baris komponen
-            newItem.innerHTML = `
-                <select class="rekening-pilihan" required><option value="">Pilih Rekening</option></select>
-                <select class="komponen-pilihan" required><option value="">Pilih Rekening Dulu</option></select>
-                <input type="number" class="komponen-volume" placeholder="Volume" min="1" required value="${data.volume || ''}">
-                <div class="harga-satuan-info">@ Rp 0</div>
-                <button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); updateTotal()">X</button>
-            `;
-            komponenList.appendChild(newItem);
-            // ... (sisa fungsi ini tetap sama)
+        const subKegiatanSelect = document.getElementById('subKegiatan');
+        const kegiatanForm = document.getElementById('kegiatanForm');
+        const kegiatanTableBody = document.getElementById('kegiatanTableBody');
+        const komponenList = document.getElementById('komponen-list');
+        const addKomponenBtn = document.getElementById('addKomponen');
+        const namaKegiatanModal = document.getElementById('namaKegiatanModal');
+        const namaKegiatanForm = document.getElementById('namaKegiatanForm');
+        const closeBtn = document.querySelector('.close-btn');
+        const editIdInput = document.getElementById('editId');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const formTitle = document.getElementById('formTitle');
+        const sisaPaguSubKegiatan = document.getElementById('sisaPaguSubKegiatan');
+        const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+        let dataAnggaran = [], dataKomponen = [], realisasi = {}, temporaryData = {};
+
+        onSnapshot(collection(db, "transaksi"), (snapshot) => {
+            realisasi = {};
+            snapshot.forEach(doc => {
+                const trx = doc.data();
+                trx.rincian.forEach(item => {
+                    const id = item.docAnggaranId;
+                    if (!realisasi[id]) realisasi[id] = 0;
+                    realisasi[id] += item.subtotal;
+                });
+            });
+            if (subKegiatanSelect.value) {
+                subKegiatanSelect.dispatchEvent(new Event('change'));
+            }
+        });
+
+        onSnapshot(collection(db, "anggaran"), (snapshot) => {
+            dataAnggaran = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const subKegiatanUnik = [...new Map(dataAnggaran.map(item => [item['kodeSubKegiatan'], item])).values()];
+            subKegiatanSelect.innerHTML = '<option value="">-- Pilih Sub Kegiatan --</option>';
+            subKegiatanUnik.sort((a,b) => a.kodeSubKegiatan.localeCompare(b.kodeSubKegiatan)).forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.kodeSubKegiatan;
+                option.textContent = `${item.kodeSubKegiatan} - ${item.namaSubKegiatan}`;
+                subKegiatanSelect.appendChild(option);
+            });
+        });
+        onSnapshot(collection(db, "komponen"), (snapshot) => { dataKomponen = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
+        
+        function populateRekeningDropdown(selectElement, selectedValue = '') {
+            const selectedSubKegiatan = subKegiatanSelect.value;
+            selectElement.innerHTML = '<option value="">-- Pilih Kode Rekening --</option>';
+            if (selectedSubKegiatan) {
+                const rekeningTerkait = dataAnggaran.filter(item => item.kodeSubKegiatan === selectedSubKegiatan);
+                rekeningTerkait.sort((a,b) => a.kodeRekening.localeCompare(b.kodeRekening)).forEach(item => {
+                    const pagu = item.paguAnggaran;
+                    const terpakai = realisasi[item.id] || 0;
+                    const sisa = pagu - terpakai;
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = `${item.kodeRekening} - ${item.uraian} (Sisa: ${formatRupiah(sisa)})`;
+                    option.disabled = sisa <= 0;
+                    selectElement.appendChild(option);
+                });
+            }
+            selectElement.value = selectedValue;
         }
         
-        document.addEventListener('change', (e) => {
-            // ... (logika untuk subKegiatan dan rekening-pilihan tetap sama) ...
+        function populateKomponenDropdown(selectElement, filterAnggaranId = '', selectedValue = '') {
+             const anggaran = dataAnggaran.find(a => a.id === filterAnggaranId);
+             if(!anggaran) {
+                 selectElement.innerHTML = '<option value="">Pilih Rekening Dulu</option>';
+                 return;
+            };
+             
+             const filteredKomponen = dataKomponen.filter(item => item.kodeRekening === anggaran.kodeRekening);
+             selectElement.innerHTML = filteredKomponen.length === 0 ? '<option value="">Tidak ada komponen</option>' : '<option value="">Pilih Komponen</option>';
+             filteredKomponen.sort((a,b) => a.nama.localeCompare(b.nama)).forEach(item => {
+                 const option = document.createElement('option');
+                 option.value = item.nama; option.textContent = item.nama;
+                 option.dataset.harga = item.harga; option.dataset.satuan = item.satuan;
+                 selectElement.appendChild(option);
+             });
+             selectElement.value = selectedValue;
+        }
 
-            // DIPERBARUI: Saat komponen dipilih
+        document.addEventListener('change', (e) => {
+            if (e.target.id === 'subKegiatan') {
+                const selectedKode = e.target.value;
+                document.querySelectorAll('.rekening-pilihan').forEach(el => populateRekeningDropdown(el));
+                let totalPaguSub = 0, totalRealisasiSub = 0;
+                const rekeningTerkait = dataAnggaran.filter(item => item.kodeSubKegiatan === selectedKode);
+                rekeningTerkait.forEach(item => {
+                    totalPaguSub += item.paguAnggaran;
+                    totalRealisasiSub += (realisasi[item.id] || 0);
+                });
+                sisaPaguSubKegiatan.textContent = `Sisa Pagu Sub Kegiatan: ${formatRupiah(totalPaguSub - totalRealisasiSub)}`;
+            }
+            if (e.target.classList.contains('rekening-pilihan')) {
+                const itemRow = e.target.closest('.komponen-item');
+                populateKomponenDropdown(itemRow.querySelector('.komponen-pilihan'), e.target.value);
+            }
             if (e.target.classList.contains('komponen-pilihan')) {
                 const selectedOption = e.target.options[e.target.selectedIndex];
                 const itemRow = e.target.closest('.komponen-item');
-                const harga = selectedOption.dataset.harga || 0;
-                const satuan = selectedOption.dataset.satuan || '';
-                // Isi info harga dan satuan
-                itemRow.querySelector('.harga-satuan-info').textContent = `@ ${formatRupiah(harga)} / ${satuan}`;
-                // Simpan data mentah untuk kalkulasi
-                itemRow.dataset.harga = harga;
-                itemRow.dataset.satuan = satuan;
+                itemRow.querySelector('.harga-satuan-info').textContent = `@ ${formatRupiah(selectedOption.dataset.harga || 0)} / ${selectedOption.dataset.satuan || ''}`;
+                itemRow.dataset.harga = selectedOption.dataset.harga || 0;
+                itemRow.dataset.satuan = selectedOption.dataset.satuan || '';
                 updateTotal();
             }
-
-            // DIPERBARUI: Saat volume diisi
-            if (e.target.classList.contains('komponen-volume')) {
-                updateTotal();
-            }
+            if (e.target.classList.contains('komponen-volume')) { updateTotal(); }
         });
         
+        function createKomponenItem(data = {}) {
+            const newItem = document.createElement('div');
+            newItem.className = 'komponen-item';
+            newItem.innerHTML = `<select class="rekening-pilihan" required><option value="">Pilih Rekening</option></select><select class="komponen-pilihan" required><option value="">Pilih Rekening Dulu</option></select><input type="number" class="komponen-volume" placeholder="Volume" min="1" required value="${data.volume || ''}"><div class="harga-satuan-info">@ Rp 0</div><button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); updateTotal()">X</button>`;
+            komponenList.appendChild(newItem);
+            const rekeningSelect = newItem.querySelector('.rekening-pilihan');
+            const komponenSelect = newItem.querySelector('.komponen-pilihan');
+            populateRekeningDropdown(rekeningSelect, data.docAnggaranId);
+            if(data.docAnggaranId) {
+                const anggaran = dataAnggaran.find(a => a.id === data.docAnggaranId);
+                if(anggaran) populateKomponenDropdown(komponenSelect, data.docAnggaranId, data.nama);
+                const itemRow = newItem;
+                itemRow.querySelector('.harga-satuan-info').textContent = `@ ${formatRupiah(data.harga || 0)} / ${data.satuan || ''}`;
+                itemRow.dataset.harga = data.harga || 0;
+                itemRow.dataset.satuan = data.satuan || '';
+            }
+        }
+
+        addKomponenBtn.addEventListener('click', () => createKomponenItem());
+        if(komponenList.children.length === 0) addKomponenBtn.click();
+
         window.updateTotal = function() {
             let total = 0;
             document.querySelectorAll('.komponen-item').forEach(item => {
@@ -182,26 +312,117 @@
             });
             document.getElementById('totalJumlah').textContent = formatRupiah(total);
         }
-
+        
         kegiatanForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            // ...
-            const rincianKomponen = [];
+            temporaryData = {}; let totalPengajuan = 0; const rincianKomponen = [];
+            let paguTerlampaui = false;
             document.querySelectorAll('.komponen-item').forEach(item => {
+                const docAnggaranId = item.querySelector('.rekening-pilihan').value;
+                if (!docAnggaranId) return;
+                const anggaran = dataAnggaran.find(a => a.id === docAnggaranId);
+                const sisa = (anggaran.paguAnggaran || 0) - (realisasi[docAnggaranId] || 0);
                 const harga = parseFloat(item.dataset.harga) || 0;
                 const volume = parseFloat(item.querySelector('.komponen-volume').value) || 0;
-                // ...
+                const subtotal = harga * volume;
+                if(subtotal > sisa) paguTerlampaui = true;
+                totalPengajuan += subtotal;
                 rincianKomponen.push({
-                    // ...
-                    satuan: item.dataset.satuan,
-                    harga: harga,
-                    // ...
+                    docAnggaranId, kodeRekening: anggaran.kodeRekening, nama: item.querySelector('.komponen-pilihan').value,
+                    volume, satuan: item.dataset.satuan, harga, subtotal
                 });
             });
-            // ...
+            if(paguTerlampaui) {
+                alert('Gagal! Salah satu atau lebih komponen melebihi sisa pagu rekeningnya.');
+                return;
+            }
+            temporaryData = {
+                tanggal: document.getElementById('tanggal').value,
+                kodeSubKegiatan: subKegiatanSelect.value,
+                namaSubKegiatan: subKegiatanSelect.options[subKegiatanSelect.selectedIndex].text.split(' - ')[1],
+                jumlah: totalPengajuan, rincian: rincianKomponen,
+                status: 'Proses Pembuatan TNT', diinputOleh: userName, timestamp: new Date()
+            };
+            document.getElementById('namaKegiatanInput').value = editIdInput.value ? kegiatanTableBody.querySelector(`[data-id="${editIdInput.value}"]`).parentElement.parentElement.cells[2].textContent : '';
+            namaKegiatanModal.style.display = 'flex';
         });
 
-        // ... (Semua sisa kode JavaScript lainnya tetap sama)
+        namaKegiatanForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            temporaryData.namaKegiatan = document.getElementById('namaKegiatanInput').value;
+            const docId = editIdInput.value;
+            try {
+                if (docId) { await updateDoc(doc(db, "transaksi", docId), temporaryData); alert('Kegiatan berhasil diperbarui!'); }
+                else { await addDoc(collection(db, "transaksi"), temporaryData); alert('Kegiatan baru berhasil disimpan!'); }
+                resetForm();
+            } catch (error) { alert('Gagal menyimpan data.'); console.error(error); }
+        });
+        
+        function resetForm() {
+            kegiatanForm.reset();
+            namaKegiatanForm.reset();
+            editIdInput.value = '';
+            namaKegiatanModal.style.display = 'none';
+            komponenList.innerHTML = '';
+            addKomponenBtn.click();
+            formTitle.textContent = 'Tambah Realisasi Kegiatan';
+            cancelEditBtn.style.display = 'none';
+            sisaPaguSubKegiatan.textContent = '';
+        }
+        cancelEditBtn.addEventListener('click', resetForm);
+
+        onSnapshot(query(collection(db, "transaksi"), orderBy("timestamp", "desc")), (snapshot) => {
+            kegiatanTableBody.innerHTML = '';
+            snapshot.forEach(doc => {
+                const data = doc.data(); const docId = doc.id; const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${data.tanggal}</td>
+                    <td>${data.namaSubKegiatan}</td>
+                    <td>${data.namaKegiatan}</td>
+                    <td class="amount">${formatRupiah(data.jumlah)}</td>
+                    <td class="action-buttons">
+                        <button class="btn-icon icon-edit" title="Edit Kegiatan" data-id="${docId}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                        <button class="btn-icon icon-delete" title="Hapus Kegiatan" data-id="${docId}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                    </td>
+                `;
+                kegiatanTableBody.appendChild(row);
+            });
+        });
+
+        kegiatanTableBody.addEventListener('click', async (e) => {
+            const button = e.target.closest('.btn-icon');
+            if(!button) return;
+            const docId = button.dataset.id;
+            if (button.classList.contains('icon-delete')) {
+                if(confirm('Yakin ingin menghapus kegiatan ini?')) {
+                    await deleteDoc(doc(db, "transaksi", docId));
+                    alert('Kegiatan berhasil dihapus.');
+                }
+            }
+            if (button.classList.contains('icon-edit')) {
+                const docRef = doc(db, "transaksi", docId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    formTitle.textContent = 'Edit Realisasi Kegiatan';
+                    editIdInput.value = docId;
+                    document.getElementById('tanggal').value = data.tanggal;
+                    subKegiatanSelect.value = data.kodeSubKegiatan;
+                    subKegiatanSelect.dispatchEvent(new Event('change'));
+                    document.getElementById('namaKegiatanInput').value = data.namaKegiatan;
+                    komponenList.innerHTML = '';
+                    setTimeout(() => {
+                        data.rincian.forEach(item => createKomponenItem(item));
+                        updateTotal();
+                    }, 200);
+                    cancelEditBtn.style.display = 'inline-block';
+                    window.scrollTo(0, 0);
+                }
+            }
+        });
+
+        closeBtn.onclick = () => namaKegiatanModal.style.display = 'none';
+        window.onclick = (event) => { if (event.target == namaKegiatanModal) { namaKegiatanModal.style.display = 'none'; } };
     </script>
 </body>
 </html>
