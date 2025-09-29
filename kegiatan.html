@@ -129,9 +129,12 @@
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 12%;">Tanggal</th><th style="width: 28%;">Sub Kegiatan</th>
-                        <th>Nama Kegiatan</th><th style="width: 15%;">Status</th>
-                        <th class="amount" style="width: 15%;">Jumlah</th><th class="action-buttons" style="width: 10%;">Aksi</th>
+                        <th style="width: 12%;">Tanggal</th>
+                        <th style="width: 28%;">Sub Kegiatan</th>
+                        <th>Nama Kegiatan</th>
+                        <th style="width: 15%;">Status</th>
+                        <th class="amount" style="width: 15%;">Jumlah</th>
+                        <th class="action-buttons" style="width: 10%;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="kegiatanTableBody"></tbody>
@@ -139,7 +142,6 @@
         </div>
     </div>
     <div id="namaKegiatanModal" class="modal"></div>
-
     <div id="komponenModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" id="closeKomponenModal">&times;</span>
@@ -319,7 +321,7 @@
             if (e.target.id === 'rekeningPilihan') {
                 populateKomponenDropdown(document.getElementById('komponenPilihan'), e.target.value);
             }
-             if (e.target.id === 'komponenPilihan') {
+            if (e.target.id === 'komponenPilihan') {
                 const selectedOption = e.target.options[e.target.selectedIndex];
                 document.getElementById('hargaSatuanInfo').textContent = `@ ${formatRupiah(selectedOption.dataset.harga || 0)} / ${selectedOption.dataset.satuan || ''}`;
             }
@@ -368,6 +370,9 @@
                 rincianTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-secondary);">Belum ada komponen ditambahkan.</td></tr>`;
                 return;
             }
+            // BARU: Urutkan rincianList sebelum ditampilkan
+            rincianList.sort((a, b) => a.kodeRekening.localeCompare(b.kodeRekening) || a.nama.localeCompare(b.nama));
+            
             rincianList.forEach((item, index) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `<td>${item.kodeRekening}</td><td>${item.nama}</td><td class="amount">${formatRupiah(item.subtotal)}</td><td class="action-buttons"><button type="button" class="btn-icon icon-edit" data-index="${index}" title="Edit Rincian"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button><button type="button" class="btn-icon icon-delete" data-index="${index}" title="Hapus Rincian"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>`;
@@ -466,10 +471,18 @@
         }
         cancelEditBtn.addEventListener('click', resetForm);
 
-        onSnapshot(query(collection(db, "transaksi"), orderBy("timestamp", "desc")), (snapshot) => {
+        onSnapshot(query(collection(db, "transaksi")), (snapshot) => {
+            let allTransaksi = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // BARU: Urutkan daftar kegiatan
+            allTransaksi.sort((a,b) => {
+                if (a.tanggal > b.tanggal) return -1; // Tanggal terbaru dulu
+                if (a.tanggal < b.tanggal) return 1;
+                return a.kodeSubKegiatan.localeCompare(b.kodeSubKegiatan); // Lalu urutkan kode
+            });
+
             kegiatanTableBody.innerHTML = '';
-            snapshot.forEach(doc => {
-                const data = doc.data(); const docId = doc.id; const row = document.createElement('tr');
+            allTransaksi.forEach(data => {
+                const docId = data.id; const row = document.createElement('tr');
                 const statusHTML = `<div class="status-group"><label><input type="radio" name="status_${docId}" value="Proses Pembuatan TNT" ${data.status === 'Proses Pembuatan TNT' ? 'checked' : ''}> <span>Proses</span></label><label><input type="radio" name="status_${docId}" value="Pengajuan TNT" ${data.status === 'Pengajuan TNT' ? 'checked' : ''}> <span>Pengajuan</span></label><label><input type="radio" name="status_${docId}" value="Terbayarkan" ${data.status === 'Terbayarkan' ? 'checked' : ''}> <span>Terbayar</span></label></div>`;
                 row.innerHTML = `
                     <td>${formatTanggalIndonesia(data.tanggal)}</td>
