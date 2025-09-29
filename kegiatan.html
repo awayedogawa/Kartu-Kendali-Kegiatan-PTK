@@ -54,10 +54,10 @@
         .manual-group label { font-size: 0.85em; margin-bottom: 0; }
         .manual-group input[type="number"] { flex-grow: 1; }
         .total-container { margin-top: 24px; text-align: right; font-size: 1.25rem; font-weight: 700; }
-        
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); word-wrap: break-word; }
-        th { background-color: #F9FAFB; font-weight: 600; color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase; }
+        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); word-wrap: break-word; vertical-align: middle; }
+        th { background-color: #F9FAFB; font-weight: 600; color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; }
+        td { font-size: 0.875rem; }
         td.amount { text-align: right; }
         .action-buttons { text-align: right; white-space: nowrap; }
         .btn-icon { background-color: transparent; border: none; cursor: pointer; padding: 6px; border-radius: 50%; display: inline-flex; }
@@ -73,11 +73,11 @@
             display: inline-flex;
             align-items: center;
             cursor: pointer;
-            padding: 5px 10px;
-            border-radius: 15px;
+            padding: 4px 8px;
+            border-radius: 12px;
             border: 1px solid var(--border-color);
             transition: all 0.2s;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
         }
         .status-group input[type="radio"] { display: none; }
         .status-group input[type="radio"]:checked + span { font-weight: 600; }
@@ -87,7 +87,9 @@
     </style>
 </head>
 <body>
+
     <aside class="sidebar"></aside>
+
     <div class="main-content">
         <header class="header"></header>
 
@@ -217,7 +219,7 @@
         addKomponenBtn.onclick = () => {
             komponenForm.reset();
             populateRekeningDropdown(document.getElementById('rekeningPilihan'));
-            document.getElementById('komponenPilihan').innerHTML = '<option value="">Pilih Kode Rekening Dulu</option>';
+            document.getElementById('komponenPilihan').innerHTML = '<option value="">Pilih Sub Kegiatan Dulu</option>';
             document.getElementById('komponenPilihan').disabled = false;
             document.getElementById('komponenVolume').disabled = false;
             document.getElementById('manualHarga').disabled = true;
@@ -479,7 +481,6 @@
 
         closeBtn.onclick = () => namaKegiatanModal.style.display = 'none';
         window.onclick = (event) => { if (event.target == namaKegiatanModal || event.target == komponenModal) { namaKegiatanModal.style.display = 'none'; komponenModal.style.display = 'none'; } };
-
     </script>
 </body>
 </html>
