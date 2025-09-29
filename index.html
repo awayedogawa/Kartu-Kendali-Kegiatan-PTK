@@ -94,6 +94,13 @@
             width: calc(100% - 260px);
             padding: 24px 32px;
         }
+        
+        /* BARU: Wrapper untuk membatasi lebar konten */
+        .content-wrapper {
+            max-width: 1440px; /* Lebar maksimal konten */
+            margin: 0 auto;    /* Membuatnya berada di tengah */
+            width: 100%;
+        }
 
         .header {
             display: flex;
@@ -146,9 +153,7 @@
     <aside class="sidebar">
         <div>
             <div class="sidebar-header">
-                <div class="logo-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 10H2V12H14V10ZM14 6H2V8H14V6ZM2 16H10V14H2V16ZM21.5 11.5L23 13L16 20L11.5 15.5L13 14L16 17L21.5 11.5Z" fill="white"/></svg>
-                </div>
+                <div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 10H2V12H14V10ZM14 6H2V8H14V6ZM2 16H10V14H2V16ZM21.5 11.5L23 13L16 20L11.5 15.5L13 14L16 17L21.5 11.5Z" fill="white"/></svg></div>
                 <h1>SI-KENDALI</h1>
             </div>
             <nav>
@@ -173,43 +178,46 @@
     </aside>
 
     <div class="main-content">
-        <header class="header">
-            <div>
-                <h2>Dashboard PTK</h2>
-                <p style="color: var(--text-secondary);">Selamat datang kembali, <span id="welcomeName"></span>!</p>
-            </div>
-            <div class="user-profile">
-                <div class="user-details">
-                    <span class="name" id="userNameDisplay"></span>
-                    <span class="role" id="userRoleDisplay"></span>
+        <div class="content-wrapper">
+            <header class="header">
+                <div>
+                    <h2>Dashboard PTK</h2>
+                    <p style="color: var(--text-secondary);">Selamat datang kembali, <span id="welcomeName"></span>!</p>
                 </div>
-                <button id="logoutBtn" title="Logout" class="logout-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                </button>
-            </div>
-        </header>
+                <div class="user-profile">
+                    <div class="user-details">
+                        <span class="name" id="userNameDisplay"></span>
+                        <span class="role" id="userRoleDisplay"></span>
+                    </div>
+                    <button id="logoutBtn" title="Logout" class="logout-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    </button>
+                </div>
+            </header>
 
-        <div class="dashboard-grid">
-            <div class="card pagu">
-                <div class="card-header"><h3>Total Pagu Anggaran</h3><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div></div>
-                <div class="amount" id="totalPagu">Memuat...</div>
-            </div>
-            <div class="card terbayarkan">
-                <div class="card-header"><h3>Total Terbayarkan</h3><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div></div>
-                <div class="amount" id="totalTerbayarkan">Memuat...</div>
-            </div>
-            <div class="card proses">
-                <div class="card-header"><h3>Dalam Proses</h3><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line><circle cx="12" cy="12" r="10"></circle></svg></div></div>
-                <div class="amount" id="totalProses">Memuat...</div>
-            </div>
-            <div class="card sisa">
-                <div class="card-header"><h3>Sisa Anggaran</h3><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg></div></div>
-                <div class="amount" id="sisaAnggaran">Memuat...</div>
+            <div class="dashboard-grid">
+                <div class="card pagu">
+                    <div class="card-header"><h3>Total Pagu Anggaran</h3><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div></div>
+                    <div class="amount" id="totalPagu">Memuat...</div>
+                </div>
+                <div class="card terbayarkan">
+                    <div class="card-header"><h3>Total Terbayarkan</h3><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div></div>
+                    <div class="amount" id="totalTerbayarkan">Memuat...</div>
+                </div>
+                <div class="card proses">
+                    <div class="card-header"><h3>Dalam Proses</h3><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line><circle cx="12" cy="12" r="10"></circle></svg></div></div>
+                    <div class="amount" id="totalProses">Memuat...</div>
+                </div>
+                <div class="card sisa">
+                    <div class="card-header"><h3>Sisa Anggaran</h3><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg></div></div>
+                    <div class="amount" id="sisaAnggaran">Memuat...</div>
+                </div>
             </div>
         </div>
     </div>
 
     <script type="module">
+        // ... (JavaScript tetap sama persis seperti sebelumnya) ...
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
@@ -241,12 +249,9 @@
             document.getElementById('paguButton').style.display = 'flex';
             document.getElementById('komponenButton').style.display = 'flex';
         }
-
-        // Tampilkan tombol input kegiatan untuk semua role kecuali 'atasan'
-        if (userRole !== 'atasan') {
-            document.getElementById('kegiatanButton').style.display = 'flex';
+        if (userRole === 'atasan') {
+            document.getElementById('kegiatanButton').style.display = 'none';
         }
-
 
         document.getElementById('logoutBtn').addEventListener('click', () => {
             sessionStorage.clear();
