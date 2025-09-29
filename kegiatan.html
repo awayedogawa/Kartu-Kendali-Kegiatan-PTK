@@ -58,7 +58,7 @@
         th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); word-wrap: break-word; vertical-align: middle; }
         th { background-color: #F9FAFB; font-weight: 600; color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; }
         td { font-size: 0.875rem; }
-        td.amount { text-align: right; }
+        td.amount { text-align: right; white-space: nowrap; font-size: 0.8rem; }
         .action-buttons { text-align: right; white-space: nowrap; }
         .btn-icon { background-color: transparent; border: none; cursor: pointer; padding: 6px; border-radius: 50%; display: inline-flex; }
         .btn-icon:hover { background-color: #F3F4F6; }
@@ -68,7 +68,7 @@
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
         .modal-content { background-color: #fff; padding: 32px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; }
         .close-btn { position: absolute; top: 16px; right: 16px; font-size: 24px; color: #9CA3AF; cursor: pointer; }
-        .status-group { display: flex; flex-wrap: wrap; gap: 5px; }
+        .status-group { display: flex; flex-direction: column; gap: 5px; align-items: flex-start; }
         .status-group label {
             display: inline-flex;
             align-items: center;
@@ -87,12 +87,9 @@
     </style>
 </head>
 <body>
-
     <aside class="sidebar"></aside>
-
     <div class="main-content">
         <header class="header"></header>
-
         <div class="card">
             <h2 id="formTitle">Input Realisasi Kegiatan</h2>
             <form id="kegiatanForm">
@@ -125,17 +122,16 @@
                 </div>
             </form>
         </div>
-        
         <div class="card">
             <h2>Daftar Kegiatan</h2>
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 10%;">Tanggal</th>
-                        <th style="width: 25%;">Sub Kegiatan</th>
-                        <th style="width: 25%;">Nama Kegiatan</th>
-                        <th style="width: 20%;">Status</th>
-                        <th class="amount" style="width: 10%;">Jumlah</th>
+                        <th style="width: 12%;">Tanggal</th>
+                        <th style="width: 28%;">Sub Kegiatan</th>
+                        <th>Nama Kegiatan</th>
+                        <th style="width: 15%;">Status</th>
+                        <th class="amount" style="width: 15%;">Jumlah</th>
                         <th class="action-buttons" style="width: 10%;">Aksi</th>
                     </tr>
                 </thead>
@@ -144,7 +140,6 @@
         </div>
     </div>
     <div id="namaKegiatanModal" class="modal"></div>
-
     <div id="komponenModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" id="closeKomponenModal">&times;</span>
@@ -214,6 +209,12 @@
         const komponenForm = document.getElementById('komponenForm');
         const closeKomponenModal = document.getElementById('closeKomponenModal');
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+        const formatTanggalIndonesia = (dateString) => {
+            const [year, month, day] = dateString.split('-');
+            const date = new Date(year, month - 1, day);
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('id-ID', options);
+        };
         let dataAnggaran = [], dataKomponen = [], realisasi = {}, temporaryData = {}, rincianList = [];
 
         addKomponenBtn.onclick = () => {
@@ -427,7 +428,7 @@
                 const data = doc.data(); const docId = doc.id; const row = document.createElement('tr');
                 const statusHTML = `<div class="status-group"><label><input type="radio" name="status_${docId}" value="Proses Pembuatan TNT" ${data.status === 'Proses Pembuatan TNT' ? 'checked' : ''}> <span>Proses</span></label><label><input type="radio" name="status_${docId}" value="Pengajuan TNT" ${data.status === 'Pengajuan TNT' ? 'checked' : ''}> <span>Pengajuan</span></label><label><input type="radio" name="status_${docId}" value="Terbayarkan" ${data.status === 'Terbayarkan' ? 'checked' : ''}> <span>Terbayar</span></label></div>`;
                 row.innerHTML = `
-                    <td>${data.tanggal}</td>
+                    <td>${formatTanggalIndonesia(data.tanggal)}</td>
                     <td>${data.kodeSubKegiatan} - ${data.namaSubKegiatan}</td>
                     <td>${data.namaKegiatan}</td>
                     <td>${statusHTML}</td>
