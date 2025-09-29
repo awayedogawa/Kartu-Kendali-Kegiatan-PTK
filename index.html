@@ -95,7 +95,6 @@
             padding: 24px 32px;
         }
         
-        /* DIPERBARUI: Menghapus max-width agar halaman penuh */
         .content-wrapper {
             width: 100%;
         }
@@ -115,7 +114,7 @@
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 24px;
         }
         .card {
@@ -134,9 +133,6 @@
         .card.sisa .card-icon { background-color: #FEE2E2; color: #DC2626; }
         .card .amount { font-size: 2.25rem; font-weight: 700; color: var(--text-primary); }
         
-        @media (max-width: 1200px) {
-            .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
-        }
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .sidebar { position: static; width: 100%; height: auto; }
@@ -149,20 +145,145 @@
 <body>
 
     <aside class="sidebar">
-        </aside>
+        <div>
+            <div class="sidebar-header">
+                <div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 10H2V12H14V10ZM14 6H2V8H14V6ZM2 16H10V14H2V16ZM21.5 11.5L23 13L16 20L11.5 15.5L13 14L16 17L21.5 11.5Z" fill="white"/></svg></div>
+                <h1>SI-KENDALI</h1>
+            </div>
+            <nav>
+                <a href="index.html" class="nav-item active">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" fill="currentColor"/></svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="kegiatan.html" id="kegiatanButton" class="nav-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                    <span>Input Kegiatan</span>
+                </a>
+                <a href="pagu.html" id="paguButton" class="nav-item" style="display:none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    <span>Kelola Pagu</span>
+                </a>
+                <a href="komponen.html" id="komponenButton" class="nav-item" style="display:none;">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>Kelola Komponen</span>
+                </a>
+            </nav>
+        </div>
+    </aside>
 
     <div class="main-content">
         <div class="content-wrapper">
             <header class="header">
-                </header>
+                <div>
+                    <h2>Dashboard PTK</h2>
+                    <p style="color: var(--text-secondary);">Selamat datang kembali, <span id="welcomeName"></span>!</p>
+                </div>
+                <div class="user-profile">
+                    <div class="user-details">
+                        <span class="name" id="userNameDisplay"></span>
+                        <span class="role" id="userRoleDisplay"></span>
+                    </div>
+                    <button id="logoutBtn" title="Logout" class="logout-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    </button>
+                </div>
+            </header>
 
             <div class="dashboard-grid">
+                <div class="card pagu">
+                    <div class="card-header"><h3>Total Pagu Anggaran</h3><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div></div>
+                    <div class="amount" id="totalPagu">Memuat...</div>
                 </div>
+                <div class="card terbayarkan">
+                    <div class="card-header"><h3>Total Terbayarkan</h3><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div></div>
+                    <div class="amount" id="totalTerbayarkan">Memuat...</div>
+                </div>
+                <div class="card proses">
+                    <div class="card-header"><h3>Dalam Proses</h3><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line><circle cx="12" cy="12" r="10"></circle></svg></div></div>
+                    <div class="amount" id="totalProses">Memuat...</div>
+                </div>
+                <div class="card sisa">
+                    <div class="card-header"><h3>Sisa Anggaran</h3><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg></div></div>
+                    <div class="amount" id="sisaAnggaran">Memuat...</div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script type="module">
-        // ... (JavaScript tetap sama persis seperti sebelumnya) ...
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
+            authDomain: "kartu-kendali-kegiatan-ptk.firebaseapp.com",
+            projectId: "kartu-kendali-kegiatan-ptk",
+            storageBucket: "kartu-kendali-kegiatan-ptk.appspot.com",
+            messagingSenderId: "694993604999",
+            appId: "1:694993604999:web:83eaf3af3ddf0c5d0bc348322"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const userRole = sessionStorage.getItem('userRole');
+        const userName = sessionStorage.getItem('userName');
+        
+        if (!userRole) {
+            alert('Akses ditolak! Silakan login terlebih dahulu.');
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('userNameDisplay').textContent = userName;
+        document.getElementById('welcomeName').textContent = userName;
+        document.getElementById('userRoleDisplay').textContent = userRole;
+        
+        if (userRole === 'admin') {
+            document.getElementById('paguButton').style.display = 'flex';
+            document.getElementById('komponenButton').style.display = 'flex';
+        }
+        if (userRole === 'atasan') {
+            document.getElementById('kegiatanButton').style.display = 'none';
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            sessionStorage.clear();
+            window.location.href = 'login.html';
+        });
+
+        async function loadDashboardData() {
+            const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+            
+            onSnapshot(collection(db, "anggaran"), (paguSnapshot) => {
+                let totalPagu = 0;
+                paguSnapshot.forEach(doc => {
+                    totalPagu += doc.data().paguAnggaran;
+                });
+
+                onSnapshot(collection(db, "transaksi"), (transaksiSnapshot) => {
+                    let totalTerbayarkan = 0;
+                    let totalProses = 0;
+                    
+                    transaksiSnapshot.forEach(doc => {
+                        const transaksi = doc.data();
+                        if (transaksi.status === 'Terbayarkan') {
+                            totalTerbayarkan += transaksi.jumlah;
+                        } else {
+                            totalProses += transaksi.jumlah;
+                        }
+                    });
+
+                    const sisaAnggaran = totalPagu - (totalTerbayarkan + totalProses);
+
+                    document.getElementById('totalPagu').textContent = formatRupiah(totalPagu);
+                    document.getElementById('totalTerbayarkan').textContent = formatRupiah(totalTerbayarkan);
+                    document.getElementById('totalProses').textContent = formatRupiah(totalProses);
+                    document.getElementById('sisaAnggaran').textContent = formatRupiah(sisaAnggaran);
+                });
+            });
+        }
+
+        loadDashboardData();
     </script>
 </body>
 </html>
