@@ -92,6 +92,7 @@
                 <div class="header-actions">
                     <button id="addPaguBtn" class="btn btn-primary">Tambah Pagu</button>
                     <button id="downloadBtn" class="btn btn-primary">Download Template</button>
+                    <button id="downloadRekapBtn" class="btn" style="background-color: #16a34a; color: white;">Download Rekap</button>
                     <label for="uploadFile" id="uploadLabel" class="btn btn-success">Upload Pagu</label>
                     <input type="file" id="uploadFile" accept=".xlsx, .xls">
                     <button id="clearDataBtn" class="btn btn-danger">Bersihkan Data</button>
@@ -107,7 +108,9 @@
                         <th class="action-buttons">Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="paguTableBody"></tbody>
+                <tbody id="paguTableBody">
+                    <tr><td colspan="5" style="text-align: center; padding: 20px;">Memuat data...</td></tr>
+                </tbody>
             </table>
         </div>
     </div>
@@ -145,9 +148,18 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
-        // Setup Sidebar & Header
+        // ### NAVIGASI DIPERBARUI DI SINI ###
         const sidebarContainer = document.querySelector('.sidebar');
-        sidebarContainer.innerHTML = `<div><div class="sidebar-header"><div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 10H2V12H14V10ZM14 6H2V8H14V6ZM2 16H10V14H2V16ZM21.5 11.5L23 13L16 20L11.5 15.5L13 14L16 17L21.5 11.5Z" fill="white"/></svg></div><h1>SI-KENDALI</h1></div><nav><a href="index.html" class="nav-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" fill="currentColor"/></svg><span>Dashboard</span></a><a href="kegiatan.html" id="kegiatanButton" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg><span>Input Kegiatan</span></a><a href="pagu.html" id="paguButton" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg><span>Kelola Pagu</span></a><a href="komponen.html" id="komponenButton" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg><span>Kelola Komponen</span></a></nav></div>`;
+        sidebarContainer.innerHTML = `<div><div class="sidebar-header"><div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 10H2V12H14V10ZM14 6H2V8H14V6ZM2 16H10V14H2V16ZM21.5 11.5L23 13L16 20L11.5 15.5L13 14L16 17L21.5 11.5Z" fill="white"/></svg></div><h1>SI-KENDALI</h1></div><nav>
+            <a href="index.html" class="nav-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" fill="currentColor"/></svg><span>Dashboard</span></a>
+            <a href="kegiatan.html" id="kegiatanButton" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg><span>Input Kegiatan</span></a>
+            
+            <a href="laporan.html" id="laporanButton" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-3"></path><rect x="8" y="3" width="8" height="4" rx="1" ry="1"></rect></svg><span>Laporan</span></a>
+            
+            <a href="pagu.html" id="paguButton" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg><span>Kelola Pagu</span></a>
+            <a href="komponen.html" id="komponenButton" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg><span>Kelola Komponen</span></a>
+            </nav></div>`;
+        
         const headerContainer = document.querySelector('.header');
         headerContainer.innerHTML = `<div><h2>Manajemen Pagu Anggaran</h2><p style="color: var(--text-secondary);">Kelola semua data pagu anggaran kegiatan.</p></div><div class="user-profile"><div class="user-details"><span class="name" id="userNameDisplay"></span><span class="role" id="userRoleDisplay"></span></div><button id="logoutBtn" title="Logout" class="logout-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></button></div>`;
         
@@ -176,7 +188,8 @@
         const downloadBtn = document.getElementById('downloadBtn');
         const uploadFile = document.getElementById('uploadFile');
         const clearDataBtn = document.getElementById('clearDataBtn');
-        
+        const downloadRekapBtn = document.getElementById('downloadRekapBtn');
+        let groupedDataForExport = {};
         const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 
         addPaguBtn.onclick = () => {
@@ -198,12 +211,15 @@
                 onSnapshot(collection(db, "transaksi"), (transaksiSnapshot) => {
                     const realisasi = {};
                     transaksiSnapshot.forEach(doc => {
-                        doc.data().rincian.forEach(item => {
-                            const id = item.docAnggaranId;
-                            if (!realisasi[id]) realisasi[id] = 0;
-                            realisasi[id] += item.subtotal;
-                        });
+                        if (doc.data().rincian && Array.isArray(doc.data().rincian)) {
+                            doc.data().rincian.forEach(item => {
+                                const id = item.docAnggaranId;
+                                if (!realisasi[id]) realisasi[id] = 0;
+                                realisasi[id] += item.subtotal;
+                            });
+                        }
                     });
+
                     const groupedData = allAnggaran.reduce((acc, item) => {
                         const key = item.kodeSubKegiatan;
                         if (!acc[key]) {
@@ -215,7 +231,15 @@
                         acc[key].rekening.push({ ...item, terpakai });
                         return acc;
                     }, {});
+                    
+                    groupedDataForExport = groupedData;
                     paguTableBody.innerHTML = '';
+                    
+                    if(Object.keys(groupedData).length === 0) {
+                         paguTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Belum ada data pagu anggaran.</td></tr>';
+                         return;
+                    }
+
                     Object.keys(groupedData).sort().forEach(kode => {
                         const group = groupedData[kode];
                         const sisaGroup = group.totalPagu - group.totalTerpakai;
@@ -307,6 +331,53 @@
             XLSX.writeFile(wb, "template_pagu_lengkap.xlsx");
         });
 
+        downloadRekapBtn.addEventListener('click', () => {
+            if (Object.keys(groupedDataForExport).length === 0) {
+                alert("Data rekap sedang dimuat atau masih kosong. Silakan tunggu beberapa saat dan coba lagi.");
+                return;
+            }
+            const rekapSubKegiatan = [];
+            const rincianRekening = [];
+            const today = new Date().toISOString().split('T')[0];
+            const formatNum = (number) => number;
+            Object.keys(groupedDataForExport).sort().forEach(kode => {
+                const group = groupedDataForExport[kode];
+                const sisaGroup = group.totalPagu - group.totalTerpakai;
+                rekapSubKegiatan.push({
+                    "Kode Sub Kegiatan": kode,
+                    "Nama Sub Kegiatan": group.namaSubKegiatan,
+                    "Total Pagu": formatNum(group.totalPagu),
+                    "Total Terpakai": formatNum(group.totalTerpakai),
+                    "Sisa Pagu": formatNum(sisaGroup)
+                });
+                group.rekening.sort((a,b) => a.kodeRekening.localeCompare(b.kodeRekening)).forEach(item => {
+                    const sisaItem = item.paguAnggaran - item.terpakai;
+                    rincianRekening.push({
+                        "Kode Sub Kegiatan": item.kodeSubKegiatan,
+                        "Nama Sub Kegiatan": item.namaSubKegiatan,
+                        "Kode Rekening": item.kodeRekening,
+                        "Uraian": item.uraian,
+                        "Pagu Anggaran": formatNum(item.paguAnggaran),
+                        "Terpakai": formatNum(item.terpakai),
+                        "Sisa Pagu": formatNum(sisaItem)
+                    });
+                });
+            });
+            try {
+                const wsRekap = XLSX.utils.json_to_sheet(rekapSubKegiatan);
+                const wsRincian = XLSX.utils.json_to_sheet(rincianRekening);
+                wsRekap['!cols'] = [ { wch: 20 }, { wch: 40 }, { wch: 20 }, { wch: 20 }, { wch: 20 } ];
+                wsRincian['!cols'] = [ { wch: 20 }, { wch: 40 }, { wch: 20 }, { wch: 40 }, { wch: 20 }, { wch: 20 }, { wch: 20 } ];
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, wsRekap, "Rekap per Sub Kegiatan");
+                XLSX.utils.book_append_sheet(wb, wsRincian, "Rincian per Rekening");
+                XLSX.writeFile(wb, `Rekap_Anggaran_SI-KENDALI_${today}.xlsx`);
+            } catch (error) {
+                alert("Gagal membuat file Excel. Silakan coba lagi.");
+                console.error("Gagal ekspor rekap:", error);
+            }
+        });
+
         uploadFile.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -316,7 +387,6 @@
                     const data = event.target.result;
                     const workbook = XLSX.read(data, { type: 'buffer' });
                     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-
                     if (confirm(`Ditemukan ${jsonData.length} baris data. Unggah semua?`)) {
                         const batch = writeBatch(db);
                         jsonData.forEach(item => {

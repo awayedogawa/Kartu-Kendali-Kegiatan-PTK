@@ -25,6 +25,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
+            overflow: hidden; /* Mencegah scrollbar saat animasi */
         }
 
         .container {
@@ -39,6 +40,21 @@
             padding: 30px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             text-align: center;
+
+            /* --- ✨ ANIMASI DITAMBAHKAN DI SINI --- */
+            /* Mulai dengan transparan agar bisa 'fade in' */
+            opacity: 0;
+            
+            /* Terapkan animasi: 
+               Nama: slideUpFadeIn
+               Durasi: 0.7 detik
+               Timing: ease-out (melambat di akhir)
+               Delay: 0.2 detik (tunggu sesaat sebelum mulai)
+            */
+            animation: slideUpFadeIn 0.7s ease-out 0.2s;
+            
+            /* Tahan di frame terakhir (opacity: 1) setelah animasi selesai */
+            animation-fill-mode: forwards;
         }
 
         .login-card h1 {
@@ -113,6 +129,21 @@
         .login-button:hover {
             background-color: #0b5ed7;
         }
+
+        /* --- ✨ KEYFRAMES UNTUK ANIMASI DITAMBAHKAN DI SINI --- */
+        @keyframes slideUpFadeIn {
+            from {
+                /* Mulai dari bawah 30px */
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                /* Selesai di posisi normal (0px) */
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
     </style>
 </head>
 <body>

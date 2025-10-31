@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan - Kartu Kendali PTK</title>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --sidebar-bg: #111827;
+            --main-bg: #F9FAFB;
+            --card-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --accent-color: #3B82F6;
+            --border-color: #E5E7EB;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--main-bg); color: var(--text-primary); display: flex; }
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: #fff; padding: 24px; height: 100vh; position: fixed; display: flex; flex-direction: column; }
+        .sidebar-header { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+        .sidebar-header .logo-icon { background-color: var(--accent-color); border-radius: 8px; padding: 8px; display: flex; align-items: center; justify-content: center; }
+        .sidebar-header h1 { font-size: 1.25rem; font-weight: 600; }
+        nav { display: flex; flex-direction: column; gap: 8px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; text-decoration: none; color: var(--text-secondary); font-weight: 500; transition: background-color 0.2s, color 0.2s; }
+        .nav-item:hover { background-color: #374151; color: #fff; }
+        .nav-item.active { background-color: var(--accent-color); color: #fff; }
+        .nav-item span { flex-grow: 1; }
+        .main-content { margin-left: 260px; width: calc(100% - 260px); padding: 24px 32px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        .header h2 { font-size: 1.875rem; font-weight: 700; }
+        .user-profile { display: flex; align-items: center; gap: 12px; }
+        .user-details { text-align: right; }
+        .user-details .name { font-weight: 600; }
+        .user-details .role { font-size: 0.875rem; color: var(--text-secondary); text-transform: capitalize; }
+        .logout-btn { background: none; border: none; cursor: pointer; color: var(--danger); padding: 8px; display: flex; align-items: center; }
+        .card { background-color: var(--card-bg); padding: 24px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 24px; }
+        
+        /* Filter Form */
+        #filterForm {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { margin-bottom: 8px; font-weight: 500; font-size: 0.875rem; }
+        .form-group input, .form-group select { padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1rem; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; height: 42px; }
+        .btn-primary { background-color: var(--accent-color); color: white; }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-secondary { background-color: var(--text-secondary); color: white; }
+
+        /* Report Area */
+        #laporanInfo { color: var(--text-secondary); margin-bottom: 16px; font-style: italic; }
+        #laporanTable { width: 100%; border-collapse: collapse; }
+        #laporanTable th, #laporanTable td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        #laporanTable th { background-color: #F9FAFB; font-weight: 600; color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase; }
+        #laporanTable td.currency { text-align: right; font-family: 'Courier New', Courier, monospace; }
+        #laporanTable tfoot tr { background-color: #F9FAFB; font-weight: 700; }
+
+        /* Print Styles */
+        @media print {
+            body { display: block; background-color: #fff; }
+            .sidebar, .header, .card-filter, .logout-btn { display: none !important; }
+            .main-content { margin-left: 0; width: 100%; padding: 0; }
+            .card { box-shadow: none; border: none; border-radius: 0; padding: 0; }
+            #laporanArea { display: block; }
+            #laporanTable { font-size: 10pt; }
+            #laporanTable th, #laporanTable td { padding: 8px; }
+            #laporanInfo { margin-top: 20px; font-size: 11pt; color: #000; }
+            h2 { font-size: 16pt; text-align: center; }
+            @page { size: A4 landscape; margin: 1cm; }
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        </aside>
+
+    <div class="main-content">
+        <header class="header">
+            </header>
+
+        <div class="card card-filter">
+            <form id="filterForm">
+                <div class="form-group">
+                    <label for="tanggalMulai">Tanggal Mulai</label>
+                    <input type="date" id="tanggalMulai" required>
+                </div>
+                <div class="form-group">
+                    <label for="tanggalSelesai">Tanggal Selesai</label>
+                    <input type="date" id="tanggalSelesai" required>
+                </div>
+                <div class="form-group">
+                    <label for="filterSubKegiatan">Sub Kegiatan</label>
+                    <select id="filterSubKegiatan">
+                        <option value="semua">-- Semua Sub Kegiatan --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="filterStatus">Status</label>
+                    <select id="filterStatus">
+                        <option value="semua">-- Semua Status --</option>
+                        <option value="Proses Pembuatan TNT">Proses Pembuatan TNT</option>
+                        <option value="Pengajuan TNT">Pengajuan TNT</option>
+                        <option value="Terbayarkan">Terbayarkan</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Tampilkan Laporan</button>
+                <button type="button" id="downloadLaporanBtn" class="btn btn-success" style="display: none;">Download Excel</button>
+                <button type="button" id="cetakLaporanBtn" class="btn btn-secondary" style="display: none;">Cetak Laporan</button>
+            </form>
+        </div>
+
+        <div class="card" id="laporanArea">
+            <h2>Hasil Laporan</h2>
+            <p id="laporanInfo">Silakan pilih filter di atas dan klik "Tampilkan Laporan" untuk memuat data.</p>
+            <table id="laporanTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Kode Rekening</th>
+                        <th>Uraian Kode Rekening</th>
+                        <th class="currency">Pagu</th>
+                        <th class="currency">Terpakai</th>
+                        <th class="currency">Sisa Pagu</th>
+                    </tr>
+                </thead>
+                <tbody id="laporanTableBody"></tbody>
+                <tfoot id="laporanTableFoot"></tfoot>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        // --- Konfigurasi Firebase ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyADvqKehIP5u9Me8q029U5X_dNKat2Kb8w",
+            authDomain: "kartu-kendali-kegiatan-ptk.firebaseapp.com",
+            projectId: "kartu-kendali-kegiatan-ptk",
+            storageBucket: "kartu-kendali-kegiatan-ptk.appspot.com",
+            messagingSenderId: "694993604999",
+            appId: "1:694993604999:web:83eaf3af3ddf0c5d0bc348322"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // --- Setup Sidebar & Header (Injeksi konten) ---
+        const sidebarContainer = document.querySelector('.sidebar');
+        // TAMBAHKAN NAV-ITEM BARU UNTUK LAPORAN
+        sidebarContainer.innerHTML = `<div><div class="sidebar-header"><div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 10H2V12H14V10ZM14 6H2V8H14V6ZM2 16H10V14H2V16ZM21.5 11.5L23 13L16 20L11.5 15.5L13 14L16 17L21.5 11.5Z" fill="white"/></svg></div><h1>SI-KENDALI</h1></div><nav>
+            <a href="index.html" class="nav-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" fill="currentColor"/></svg><span>Dashboard</span></a>
+            <a href="kegiatan.html" id="kegiatanButton" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg><span>Input Kegiatan</span></a>
+            <a href="laporan.html" id="laporanButton" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-3"></path><rect x="8" y="3" width="8" height="4" rx="1" ry="1"></rect></svg><span>Laporan</span></a>
+            <a href="pagu.html" id="paguButton" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg><span>Kelola Pagu</span></a>
+            <a href="komponen.html" id="komponenButton" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg><span>Kelola Komponen</span></a>
+            </nav></div>`;
+        
+        const headerContainer = document.querySelector('.header');
+        headerContainer.innerHTML = `<div><h2>Laporan Rekapitulasi</h2><p style="color: var(--text-secondary);">Filter dan lihat rekapitulasi realisasi anggaran.</p></div><div class="user-profile"><div class="user-details"><span class="name" id="userNameDisplay"></span><span class="role" id="userRoleDisplay"></span></div><button id="logoutBtn" title="Logout" class="logout-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></button></div>`;
+        
+        // --- Logika Otentikasi & Navigasi ---
+        const userRole = sessionStorage.getItem('userRole');
+        const userName = sessionStorage.getItem('userName');
+        if (!userRole) { window.location.href = 'login.html'; }
+        document.getElementById('userNameDisplay').textContent = userName;
+        document.getElementById('userRoleDisplay').textContent = userRole;
+        document.getElementById('logoutBtn').addEventListener('click', () => { sessionStorage.clear(); window.location.href = 'login.html'; });
+
+        // Tampilkan/Sembunyikan menu berdasarkan peran
+        if (userRole === 'admin') {
+            document.getElementById('paguButton').style.display = 'flex';
+            document.getElementById('komponenButton').style.display = 'flex';
+        } else {
+            document.getElementById('paguButton').style.display = 'none';
+            document.getElementById('komponenButton').style.display = 'none';
+        }
+
+        if (userRole === 'atasan') {
+            document.getElementById('kegiatanButton').style.display = 'none';
+        }
+        
+        // --- Variabel Global ---
+        const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+        let dataAnggaran = [];
+        let dataTransaksi = [];
+        let dataLaporan = []; // Menyimpan hasil rekap untuk di-download
+
+        // --- Variabel DOM ---
+        const filterForm = document.getElementById('filterForm');
+        const tanggalMulaiInput = document.getElementById('tanggalMulai');
+        const tanggalSelesaiInput = document.getElementById('tanggalSelesai');
+        const filterSubKegiatanSelect = document.getElementById('filterSubKegiatan');
+        const filterStatusSelect = document.getElementById('filterStatus');
+        const downloadLaporanBtn = document.getElementById('downloadLaporanBtn');
+        const cetakLaporanBtn = document.getElementById('cetakLaporanBtn');
+        const laporanInfo = document.getElementById('laporanInfo');
+        const laporanTable = document.getElementById('laporanTable');
+        const laporanTableBody = document.getElementById('laporanTableBody');
+        const laporanTableFoot = document.getElementById('laporanTableFoot');
+        
+        // --- Inisialisasi Data ---
+        async function loadInitialData() {
+            // 1. Set tanggal default (misal, 1 tahun terakhir)
+            const today = new Date();
+            const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+            tanggalMulaiInput.value = firstDayOfYear.toISOString().split('T')[0];
+            tanggalSelesaiInput.value = today.toISOString().split('T')[0];
+            
+            // 2. Ambil semua data pagu
+            const anggaranSnapshot = await getDocs(collection(db, "anggaran"));
+            dataAnggaran = anggaranSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // 3. Ambil semua data transaksi
+            const transaksiSnapshot = await getDocs(collection(db, "transaksi"));
+            dataTransaksi = transaksiSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            // 4. Isi filter Sub Kegiatan
+            populateFilters();
+        }
+
+        function populateFilters() {
+            const subKegiatanUnik = [...new Map(dataAnggaran.map(item => [item['kodeSubKegiatan'], item])).values()];
+            subKegiatanUnik.sort((a,b) => a.kodeSubKegiatan.localeCompare(b.kodeSubKegiatan)).forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.kodeSubKegiatan;
+                option.textContent = `${item.kodeSubKegiatan} - ${item.namaSubKegiatan}`;
+                filterSubKegiatanSelect.appendChild(option);
+            });
+        }
+        
+        // Panggil fungsi inisialisasi
+        loadInitialData();
+
+        // --- Event Listeners ---
+        filterForm.addEventListener('submit', generateReport);
+        downloadLaporanBtn.addEventListener('click', downloadExcel);
+        cetakLaporanBtn.addEventListener('click', () => window.print());
+
+        // --- Fungsi Utama: Generate Laporan ---
+        function generateReport(e) {
+            e.preventDefault();
+            
+            // 1. Ambil nilai filter
+            const tglMulai = tanggalMulaiInput.value;
+            const tglSelesai = tanggalSelesaiInput.value;
+            const kodeSubKegiatan = filterSubKegiatanSelect.value;
+            const status = filterStatusSelect.value;
+            
+            // 2. Filter data
+            // Filter Transaksi
+            const transaksiTerfilter = dataTransaksi.filter(trx => {
+                const tglPas = trx.tanggal >= tglMulai && trx.tanggal <= tglSelesai;
+                const subKegiatanPas = (kodeSubKegiatan === 'semua' || trx.kodeSubKegiatan === kodeSubKegiatan);
+                const statusPas = (status === 'semua' || trx.status === status);
+                return tglPas && subKegiatanPas && statusPas;
+            });
+
+            // Filter Anggaran (Pagu)
+            const anggaranTerfilter = dataAnggaran.filter(pagu => {
+                return (kodeSubKegiatan === 'semua' || pagu.kodeSubKegiatan === kodeSubKegiatan);
+            });
+            
+            // 3. Agregasi Data per Kode Rekening
+            const rekapRekening = {};
+            
+            // 3a. Inisialisasi Pagu dari anggaran terfilter
+            anggaranTerfilter.forEach(pagu => {
+                if (!rekapRekening[pagu.kodeRekening]) {
+                    rekapRekening[pagu.kodeRekening] = {
+                        uraian: pagu.uraian,
+                        pagu: 0,
+                        terpakai: 0
+                    };
+                }
+                rekapRekening[pagu.kodeRekening].pagu += pagu.paguAnggaran;
+            });
+            
+            // 3b. Akumulasi 'Terpakai' dari transaksi terfilter
+            transaksiTerfilter.forEach(trx => {
+                if(trx.rincian && Array.isArray(trx.rincian)) {
+                    trx.rincian.forEach(item => {
+                        // Hanya tambahkan 'terpakai' jika kode rekeningnya ada di pagu yang terfilter
+                        if (rekapRekening[item.kodeRekening]) {
+                            rekapRekening[item.kodeRekening].terpakai += item.subtotal;
+                        }
+                    });
+                }
+            });
+            
+            // 4. Render ke Tabel
+            renderReportTable(rekapRekening, {tglMulai, tglSelesai, kodeSubKegiatan, status});
+        }
+        
+        // --- Fungsi Render ---
+        function renderReportTable(rekapData, filterInfo) {
+            laporanTableBody.innerHTML = '';
+            laporanTableFoot.innerHTML = '';
+            dataLaporan = []; // Kosongkan data laporan lama
+            
+            let totalPagu = 0;
+            let totalTerpakai = 0;
+            let totalSisa = 0;
+
+            if (Object.keys(rekapData).length === 0) {
+                laporanInfo.textContent = 'Tidak ada data yang cocok dengan filter yang Anda pilih.';
+                laporanTable.style.display = 'none';
+                downloadLaporanBtn.style.display = 'none';
+                cetakLaporanBtn.style.display = 'none';
+                return;
+            }
+            
+            // Update info laporan
+            const subKegText = filterInfo.kodeSubKegiatan === 'semua' ? 'Semua Sub Kegiatan' : filterSubKegiatanSelect.options[filterSubKegiatanSelect.selectedIndex].text;
+            const statusText = filterInfo.status === 'semua' ? 'Semua Status' : filterInfo.status;
+            laporanInfo.textContent = `Menampilkan Laporan dari ${filterInfo.tglMulai} s.d. ${filterInfo.tglSelesai}. Filter: [${subKegText}] - [${statusText}].`;
+
+            const sortedKeys = Object.keys(rekapData).sort();
+            
+            sortedKeys.forEach(kodeRekening => {
+                const item = rekapData[kodeRekening];
+                const sisa = item.pagu - item.terpakai;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${kodeRekening}</td>
+                    <td>${item.uraian}</td>
+                    <td class="currency">${formatRupiah(item.pagu)}</td>
+                    <td class="currency">${formatRupiah(item.terpakai)}</td>
+                    <td class="currency">${formatRupiah(sisa)}</td>
+                `;
+                laporanTableBody.appendChild(row);
+                
+                // Simpan data untuk Excel (angka mentah)
+                dataLaporan.push({
+                    "Kode Rekening": kodeRekening,
+                    "Uraian": item.uraian,
+                    "Pagu": item.pagu,
+                    "Terpakai": item.terpakai,
+                    "Sisa Pagu": sisa
+                });
+                
+                totalPagu += item.pagu;
+                totalTerpakai += item.terpakai;
+                totalSisa += sisa;
+            });
+            
+            // Render Total (Footer)
+            const footRow = document.createElement('tr');
+            footRow.innerHTML = `
+                <td colspan="2" style="text-align: right; font-weight: 700;">TOTAL</td>
+                <td class="currency">${formatRupiah(totalPagu)}</td>
+                <td class="currency">${formatRupiah(totalTerpakai)}</td>
+                <td class="currency">${formatRupiah(totalSisa)}</td>
+            `;
+            laporanTableFoot.appendChild(footRow);
+            
+            // Tampilkan tabel dan tombol aksi
+            laporanTable.style.display = 'table';
+            downloadLaporanBtn.style.display = 'inline-block';
+            cetakLaporanBtn.style.display = 'inline-block';
+        }
+        
+        // --- Fungsi Download Excel ---
+        function downloadExcel() {
+            if (dataLaporan.length === 0) {
+                alert("Tidak ada data untuk diunduh.");
+                return;
+            }
+            
+            const today = new Date().toISOString().split('T')[0];
+            const ws = XLSX.utils.json_to_sheet(dataLaporan);
+            
+            // Atur lebar kolom (opsional tapi rapi)
+            ws['!cols'] = [ { wch: 20 }, { wch: 40 }, { wch: 20 }, { wch: 20 }, { wch: 20 } ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Rekap Realisasi");
+            XLSX.writeFile(wb, `Laporan_Realisasi_${today}.xlsx`);
+        }
+    </script>
+</body>
+</html>
